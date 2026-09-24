@@ -176,7 +176,7 @@ check(w.cur_dir == "/", "Up")
 
 print("progress text fits (window at its minimum size)")
 import tkinter.font as tkfont
-root.deiconify(); w.win.deiconify(); w.win.geometry("760x640")  # shown for real: hidden windows have no width
+root.deiconify(); w.win.deiconify(); w.win.geometry(f"{w.win.minsize()[0]}x640")  # shown for real: hidden windows have no width
 for _ in range(5):
     root.update()
 worst = [  # (sent, total, bytes/s) giving the longest texts: sizes up to 1023.9 MB, slow speeds -> h:mm:ss left

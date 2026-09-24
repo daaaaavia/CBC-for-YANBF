@@ -128,7 +128,7 @@ if REAL != "win32":
     check(d.enabled == have, f"enabled when tkinterdnd2 is installed ({have})")
     if have:
         script = root.tk.call("bind", root, "<<Drop:DND_Files>>")
-        script = str(script).replace("%D", "{/tmp/a b.glb}").replace("%X", "5").replace("%Y", "6")
+        script = str(script).replace("%D", "{{/tmp/a b.glb}}")  # tkdnd passes a list.replace("%X", "5").replace("%Y", "6")
         check(root.tk.eval(script) == "copy" and got == [(["/tmp/a b.glb"], 5, 6)], f"bound drop script: {got}")
 root.destroy()
 

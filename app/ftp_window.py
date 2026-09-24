@@ -64,6 +64,8 @@ class SendWindow:
 
         self.refresh_files()
         self._set_status("Not connected", "hint")
+        win.update_idletasks()  # never narrower than the content needs (Mac fonts are wider)
+        win.minsize(max(760, win.winfo_reqwidth()), 640)
         self._poll_id = win.after(50, self._poll)
         if not self.host_var.get():
             self.host_entry.focus_set()
@@ -143,7 +145,7 @@ class SendWindow:
             r += 1
             prog = ttk.Frame(box)
             prog.grid(row=r, column=1, columnspan=3, sticky="ew", padx=(10, 0), pady=(4, 0))
-            prog.columnconfigure(0, weight=1)
+            prog.columnconfigure(0, weight=1, minsize=200)  # the window widens for bigger (Mac) fonts
             row["bar"] = ttk.Progressbar(prog, maximum=1000, value=0)
             row["bar"].grid(row=0, column=0, sticky="ew")
             # wide enough for the longest text, e.g. "1023.9 MB / 1023.9 MB  ·  1023.9 KB/s  ·  59:59 left"

@@ -11,9 +11,9 @@ import yanbf_cbc as g
 print("paths")
 check(paths.BANNER_TEMPLATE == os.path.join(paths.BASE_DIR, "banner.blend") and os.path.isfile(paths.BANNER_TEMPLATE),
       "source mode: banner.blend in the project folder")
-sys._MEIPASS = r"C:\fake\_MEI123"
+sys._MEIPASS = os.path.join(S, "_MEI123")
 importlib.reload(paths)
-check(paths.BANNER_TEMPLATE == r"C:\fake\_MEI123\banner.blend", "frozen: read from the exe's bundled data")
+check(paths.BANNER_TEMPLATE == os.path.join(S, "_MEI123", "banner.blend"), "frozen: read from the exe's bundled data")
 del sys._MEIPASS
 importlib.reload(paths)
 isolate("template", fresh=False)  # the reload reset the scratch paths
