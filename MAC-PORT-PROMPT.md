@@ -88,8 +88,12 @@ These are all the Windows-specific spots found in `app/`. Add a small
   works from inside a frozen `.app`.
 
 **Tests (phase 1):**
-- **Existing suites:** they live in the previous session's scratchpad and may
-  be gone. If they're missing, write fresh tests.
+- **Existing suites:** `tests/run_all.py` runs the 14 suites in
+  `tests/suite_*.py` (see the README's *Tests* section). They generate their
+  own inputs and never touch the user's data. A few checks are gated on
+  `WINDOWS` in `tests/_common.py`, such as the native ttk theme and the drag
+  and drop suite. Give those macOS equivalents rather than deleting them, and
+  add the new tests as `tests/suite_*.py` too.
 - **New tests:** cover the platform helpers with `sys.platform` monkeypatched
   to `darwin`:
   - tool names;

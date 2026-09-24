@@ -1,0 +1,2 @@
+# Only for the tests (not bundled into the app): a local FTP server for suite_ftp.py.
+pyftpdlib

@@ -329,6 +329,42 @@ py -3.14 -m venv .venv
 
 `get_pycgfx.py` is only needed once, after cloning the repository.
 
+## Tests
+
+From `YANBF-CBC` (with the app's virtual environment set up as above):
+
+```bat
+app\.venv\Scripts\python -m pip install -r tests\requirements-dev.txt
+app\.venv\Scripts\python tests\run_all.py
+```
+
+`run_all.py` runs the 14 suites in `tests/suite_*.py`, each in its own process,
+and prints one line per suite. Useful options:
+
+- `run_all.py nds ftp` runs just those suites;
+- `-v` prints every check;
+- `--keep` keeps the work folder afterwards.
+
+A few things to know:
+
+- **Generated inputs:** `tests/fixtures.py` creates everything the tests use
+  in a temporary folder each run. That covers icons, banners, `.glb` models,
+  WAV files, `.nds` headers and stand-in tools. No test files are stored in
+  the repository, and nothing copyrighted is needed.
+- **Audio limit reference:** `wav/ref.wav` is exactly 141,000 frames at 48 kHz,
+  the same length as the reference clip.
+- **Your own files are safe:** each suite points `settings.json`,
+  `unique_ids.json` and `output/` at its own scratch files, so your real ones
+  are never touched.
+- **Real windows open:** the GUI suites briefly open Tk windows, so run them
+  on a desktop session.
+- **Real tools run:** `suite_pipeline` also builds real CIAs with the tools in
+  `processes/` and checks them with ctrtool.
+- **Windows only:** `suite_dragdrop` sends real Windows drop messages. On
+  other systems it reports *skipped*.
+- **pyftpdlib:** `suite_ftp` needs it (from `requirements-dev.txt`). It's only
+  for the tests, not the app.
+
 In source mode the program folder is `YANBF-CBC/` (the parent of `app/`).
 
 ## Building the exe
