@@ -50,6 +50,7 @@ jobs:
         run: python scripts/get_pycgfx.py
 
       - name: Tests
+        timeout-minutes: 30
         run: python tests/run_all.py
 
       - name: Build YANBF-CBC.exe
@@ -157,6 +158,7 @@ jobs:
         run: python scripts/get_pycgfx.py
 
       - name: Tests
+        timeout-minutes: 30
         run: python tests/run_all.py
 
       - name: Build YANBF-CBC.app

@@ -28,6 +28,7 @@ def main():
     ap = argparse.ArgumentParser(description="Run the YANBF-CBC test suites.")
     ap.add_argument("suites", nargs="*", help="suite names (e.g. nds for suite_nds.py); default: all")
     ap.add_argument("--keep", action="store_true", help="keep the work folder with the generated inputs")
+    ap.add_argument("--timeout", type=float, default=300, help="seconds before a suite counts as hung (default 300)")
     ap.add_argument("-v", "--verbose", action="store_true", help="print every check, not just failures")
     args = ap.parse_args()
 
@@ -41,13 +42,18 @@ def main():
     work = tempfile.mkdtemp(prefix="yanbf-tests-")
     import fixtures
     fixtures.build(work)
-    env = dict(os.environ, YANBF_TEST_DIR=work, PYTHONIOENCODING="utf-8")
+    env = dict(os.environ, YANBF_TEST_DIR=work, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
     results = {}
     try:
         for n in names:
             t = time.perf_counter()
-            r = subprocess.run([sys.executable, found[n]], env=env, capture_output=True, text=True,
-                               encoding="utf-8", errors="replace")
+            try:
+                r = subprocess.run([sys.executable, found[n]], env=env, capture_output=True, text=True,
+                                   encoding="utf-8", errors="replace", timeout=args.timeout)
+            except subprocess.TimeoutExpired as ex:  # a hung suite fails, showing how far it got
+                dec = lambda b: (b.decode("utf-8", "replace") if isinstance(b, bytes) else b) or ""
+                r = subprocess.CompletedProcess(ex.cmd, 1, dec(ex.stdout),
+                                                dec(ex.stderr) + f"\nTIMED OUT after {args.timeout} s")
             secs = time.perf_counter() - t
             status = {0: "passed", 2: "skipped"}.get(r.returncode, "FAILED")
             results[n] = status
