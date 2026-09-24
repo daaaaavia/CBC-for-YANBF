@@ -255,6 +255,7 @@ class App:
         caption(r, textvariable=self.banner_caption_var)
         # ready-made Blender file for 3D banners (3D Model mode only, see _on_mode_change)
         self.template_btn = button(r, "Template…", self.save_banner_template)
+        self.template_btn.configure(width=10)  # "Template…" is a character longer than "Browse…"
         self.template_btn.grid_configure(pady=(2, 0), sticky="nw")
         r += 1
         self.banner_err = error_label(r); r += 1
