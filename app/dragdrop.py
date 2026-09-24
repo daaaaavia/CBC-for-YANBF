@@ -9,8 +9,9 @@ window procedure, so it should only queue work for the Tk loop.
 
 macOS (and Linux) use tkdnd through the tkinterdnd2 package, registered on the
 top-level window too; tkdnd passes a drop over a child widget up to it. The
-callback gets the same arguments. If tkinterdnd2 isn't installed, drag and drop
-is simply off (enabled stays False) and Browse still works.
+callback gets the same arguments. If tkinterdnd2 isn't installed, or has no tkdnd
+build for this Mac (it has none for Intel Macs with Tk 9), drag and drop is simply
+off (enabled stays False) and Browse still works.
 """
 
 import ctypes

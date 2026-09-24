@@ -5,7 +5,7 @@ import math
 import os
 import time
 
-from _common import CASE_GLB, S, check, finish, isolate
+from _common import CASE_GLB, S, check, check_speed, finish, isolate
 isolate("grid")
 from PIL import Image
 import home_bg, home_preview as hp, preview
@@ -91,7 +91,7 @@ t = time.perf_counter()
 for k in range(10):
     hp.to_screen(preview.render(preview.pose(mesh, k * 0.3, spin, bills), size=(400, 240), background=bg), grid)
 ms = (time.perf_counter() - t) * 100
-check(ms < 45, f"frame incl. grid: {ms:.1f} ms")
+check_speed(ms < 45, f"frame incl. grid: {ms:.1f} ms")
 
 import tkinter as tk
 import yanbf_cbc as g2

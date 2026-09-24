@@ -118,14 +118,18 @@ check(res_ == "copy" and got == [(["/Users/me/My ROM.nds", "/Users/me/icon.png"]
       f"a tkdnd drop -> callback(paths, x, y): {got}")
 if REAL != "win32":
     try:
-        import tkinterdnd2  # noqa: F401
-        have = True
+        import platform
+        import tkinterdnd2
+        # tkinterdnd2 0.6.3 has no tkdnd for Intel Macs with Tk 9
+        rep = {"arm64": "osx-arm64", "x86_64": "osx-x64"}.get(platform.machine(), "linux-x64")
+        rep += "-tcl9" if tk.TclVersion >= 9 else ""
+        have = os.path.isdir(os.path.join(os.path.dirname(tkinterdnd2.__file__), "tkdnd", rep))
     except ImportError:
         have = False
     got.clear()
     root.update()
     d = dragdrop.FileDropTarget(root, lambda p, x, y: got.append((p, x, y)))
-    check(d.enabled == have, f"enabled when tkinterdnd2 is installed ({have})")
+    check(d.enabled == have, f"enabled where tkdnd has a build for this system ({have})")
     if have:
         script = root.tk.call("bind", root, "<<Drop:DND_Files>>")
         # tkdnd passes %D as a list

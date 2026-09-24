@@ -3,7 +3,7 @@ import math
 import os
 import time
 
-from _common import CASE_GLB, check, finish, isolate, S
+from _common import CASE_GLB, check, check_speed, finish, isolate, S
 isolate("home")
 import preview
 
@@ -64,7 +64,7 @@ t = time.perf_counter()
 for k in range(10):
     preview.render(preview.pose(real, k * 0.2, rs, rb), size=(400, 240), background=bg)
 ms = (time.perf_counter() - t) * 100
-check(ms < 80, f"real model frame (pose + 400x240 render): {ms:.1f} ms")
+check_speed(ms < 80, f"real model frame (pose + 400x240 render): {ms:.1f} ms")
 
 print("window")
 import tkinter as tk

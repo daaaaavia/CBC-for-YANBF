@@ -53,6 +53,15 @@ def check(cond, msg):
         failures.append(msg)
 
 
+def check_speed(cond, msg):
+    """A timing check. Shared CI machines (GitHub's Intel Macs especially) are too slow
+    and too variable to judge speed, so there (CI=true) it's reported, not enforced."""
+    if cond or os.environ.get("CI") != "true":
+        check(cond, msg)
+    else:
+        print(f"  SLOW {msg} (not enforced on CI)")
+
+
 def skip(reason):
     """End the suite without running it (exit code 2 = skipped)."""
     print(f"SKIPPED: {reason}")

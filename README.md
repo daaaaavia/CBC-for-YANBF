@@ -368,7 +368,8 @@ The Mac app works like the Windows one. The differences:
   `~/Library/Application Support/YANBF-CBC/`. Built CIAs go to
   `~/Documents/YANBF-CBC/output/`.
 - **Drag and drop** from Finder uses tkinterdnd2 (tkdnd), which is bundled in
-  the app. **Audio preview** uses macOS's built-in `afplay`. **Appearance:**
+  the app. **Intel Macs:** tkinterdnd2 has no tkdnd build for Intel Macs with
+  Tk 9, so drag and drop is off there. Use the Browse buttons instead. **Audio preview** uses macOS's built-in `afplay`. **Appearance:**
   *System* follows macOS's light or dark mode. Title bars always follow
   macOS itself.
 

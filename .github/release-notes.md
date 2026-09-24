@@ -35,6 +35,8 @@ On a Mac, settings and the Unique ID list are kept in
 `~/Library/Application Support/YANBF-CBC`. Built CIAs go to
 `~/Documents/YANBF-CBC/output`.
 
+On Intel Macs, drag and drop isn't available. Use the Browse buttons instead.
+
 ## Why pycgfx isn't included
 
 pycgfx by skyfloogle has no license that allows sharing it, so it always comes from

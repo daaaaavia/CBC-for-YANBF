@@ -188,8 +188,8 @@ class App:
             self.log("info", f"Tip: drag files from {pu.file_manager()} onto the ROM, icon, banner or audio rows "
                              "(or their previews), or drop several at once anywhere in the window.")
         elif not pu.is_windows():
-            self.log("info", "Tip: drag and drop needs the tkinterdnd2 package (pip install tkinterdnd2); "
-                             "Browse works without it.")
+            self.log("info", "Drag and drop isn't available on this Mac (Intel Macs, or no tkinterdnd2) - "
+                             "use the Browse buttons.")
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self):
