@@ -34,9 +34,16 @@ starting the next:
   are Windows builds. macOS needs its own builds of each.
 - **Repository:** the code is in a private GitHub repo. Two files have no
   license that allows sharing, and they're handled differently:
-  - **pycgfx:** `scripts/get_pycgfx.py` rebuilds `processes/YANBF/pycgfx/` from
-    upstream at a pinned commit plus `patches/pycgfx.patch`, and checks the
-    result by SHA-256. Run it on every fresh checkout, including in CI.
+  - **pycgfx:** `app/pycgfx_setup.py` downloads upstream at a pinned commit
+    (a zip, no git needed), applies the built-in fixes (the same as
+    `patches/pycgfx.patch`) and checks every file by SHA-256. The app shows
+    `app/pycgfx_window.py` at startup when pycgfx isn't the tested version.
+    `scripts/get_pycgfx.py` does the same from the command line; run it in CI.
+    **On macOS**, files can't be written inside a signed `.app` bundle. So:
+    - bundle the set-up pycgfx into `Contents/Resources` at build time;
+    - if the setup window ever has to install it, point `paths.PYCGFX_DIR` at
+      a user-writable folder such as `~/Library/Application Support/YANBF-CBC/pycgfx`,
+      not the bundle.
   - **The real HOME Menu screenshot** (Nintendo artwork) is the exception: the
     user chose to keep `app/home_bg_screenshot.py` **in** the private repo, so
     the Mac build shows it too. Keep the plain-backdrop fallback in
@@ -71,7 +78,7 @@ These are all the Windows-specific spots found in `app/`. Add a small
 | `paths.py` | Tool names end in `.exe` | No extension on macOS/Linux. **Frozen .app:** `sys.executable` is inside `YANBF-CBC.app/Contents/MacOS/`. Look for `processes/` in `Contents/Resources/processes` first, then next to the `.app`. **User data:** write `settings.json`, `unique_ids.json` and `output/` to a writable location: `~/Library/Application Support/YANBF-CBC/` for the two JSON files, and `~/Documents/YANBF-CBC/output` for output. Never write inside the bundle. Keep Windows paths unchanged. |
 | `pipeline.py` | `creationflags=CREATE_NO_WINDOW` (falls back to `0x08000000`) | **Must be 0 or omitted on non-Windows.** A non-zero `creationflags` raises `ValueError` on POSIX. Also make sure the tools are executable (`chmod +x` if needed) and give a clear error if macOS quarantine blocks them. |
 | `yanbf_cbc.py`, `home_preview.py` | `winsound.PlaySound(..., SND_ASYNC)` and `PlaySound(None, 0)` to stop | Start `afplay <file>` with `subprocess.Popen` and `terminate()` it to stop. Keep the existing "play ended" behaviour: the Play button returns to ▶ when the clip finishes, which can be done by polling the process. Import `winsound` only on Windows. |
-| `yanbf_cbc.py` | `os.startfile(path)` for the output folder | `subprocess.run(["open", path])` on macOS, `xdg-open` on Linux. |
+| `yanbf_cbc.py`, `pycgfx_window.py` | `os.startfile(path)` for the output folder and the pycgfx folder | `subprocess.run(["open", path])` on macOS, `xdg-open` on Linux. |
 | `dragdrop.py` | Win32 `WM_DROPFILES` via ctypes | Use **`tkinterdnd2`** on macOS (the one allowed new dependency; it bundles tkdnd). Keep the ctypes version on Windows, since it is tested and working. The drop callback must keep the same contract (`callback(paths, x_root, y_root)`, queued to the Tk loop) so `route_drop` / `handle_drop` / `zone_at` are unchanged. If tkinterdnd2 can't load, disable drag and drop quietly (Browse still works) and log a tip. |
 | `theme.py` `system_is_dark()` | Windows registry `AppsUseLightTheme` | `defaults read -g AppleInterfaceStyle` (prints `Dark` in dark mode; exits non-zero in light mode). |
 | `theme.py` `set_title_bar()` | DWM dark title bar | No-op on macOS: title bars follow the system appearance. |
@@ -91,7 +98,7 @@ These are all the Windows-specific spots found in `app/`. Add a small
   works from inside a frozen `.app`.
 
 **Tests (phase 1):**
-- **Existing suites:** `tests/run_all.py` runs the 14 suites in
+- **Existing suites:** `tests/run_all.py` runs the 15 suites in
   `tests/suite_*.py` (see the README's *Tests* section). They generate their
   own inputs and never touch the user's data. A few checks are gated on
   `WINDOWS` in `tests/_common.py`, such as the native ttk theme and the drag

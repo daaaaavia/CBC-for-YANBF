@@ -23,6 +23,8 @@ import nds
 import paths
 import pipeline as pl
 import preview
+import pycgfx_setup
+import pycgfx_window
 import settings
 import theme
 
@@ -107,6 +109,7 @@ class App:
         self.last_out_dir = None
         self.last_cia = None  # .cia from this session's last successful build
         self.ftp_win = None  # Send to 3DS window
+        self.pycgfx_win = None  # Set up pycgfx window
         self.loaded_nds = None  # normalized path of the .nds the fields were filled from
         self.locks = {}  # key -> {"widget", "var", "button", "state": free|locked|editing}
         # previews
@@ -658,6 +661,8 @@ class App:
         self._stop_audio()
         if self._home_open():
             self.home_win.close()
+        if self._pycgfx_open():
+            self.pycgfx_win.close()
         self.root.after_cancel(self._poll_id)
         self.root.after_cancel(self._theme_watch_id)
         self.root.destroy()
@@ -734,6 +739,8 @@ class App:
                 theme.set_title_bar(dlg)
         if self._ftp_open():
             self.ftp_win.restyle()
+        if self._pycgfx_open():
+            self.pycgfx_win.restyle()
         # previews: redraw with the new panel colours
         for key in ("icon", "audio"):
             self._preview_keys.pop(key, None)
@@ -1142,8 +1149,19 @@ class App:
         self._poll_id = self.root.after(50, self._poll_queue)
 
     # ------------------------------------------------------------------ checks
-    def check_tools(self):
+    @staticmethod
+    def find_missing():
+        """Required files that are missing - pycgfx counts as missing unless it's the
+        tested version (pycgfx_setup checks every file)."""
         missing = paths.find_missing()
+        if not pycgfx_setup.is_ready() and paths.PYCGFX_MAIN not in missing:
+            missing.append(paths.PYCGFX_MAIN)
+        return missing
+
+    def check_tools(self):
+        missing = self.find_missing()
+        if paths.PYCGFX_MAIN in missing and os.path.isfile(paths.PYCGFX_MAIN):
+            self.log("err", f"pycgfx isn't the tested version ({pycgfx_setup.SHORT}) - see the setup window")
         if missing:
             self.log("err", f"Missing required files (program folder: {paths.BASE_DIR}):")
             for p in missing:
@@ -1153,8 +1171,43 @@ class App:
             self.log("ok", "All required tools found.")
         return missing
 
-    def show_missing_error(self):
-        short = "\n".join(paths.rel(p) for p in self.missing)
+    def startup_checks(self):
+        """After the window is shown: set up pycgfx if needed, report other missing files."""
+        try:
+            if pycgfx_setup.fix_stock():  # the original files were placed by hand
+                self.log("ok", f"Added this project's two fixes to pycgfx {pycgfx_setup.SHORT}")
+                self.missing = self.check_tools()
+                self.validate()
+        except (pycgfx_setup.SetupError, OSError) as ex:
+            self.log("err", f"Couldn't add the fixes to pycgfx: {ex}")
+        self.report_missing()
+
+    def report_missing(self):
+        """pycgfx gets its setup window; anything else missing gets the error box."""
+        pyc_dir = os.path.normcase(paths.PYCGFX_DIR)
+        others = [p for p in self.missing
+                  if os.path.normcase(p) != pyc_dir and not os.path.normcase(p).startswith(pyc_dir + os.sep)]
+        if len(others) < len(self.missing):
+            self.open_pycgfx_setup()
+        if others:
+            self.show_missing_error(others)
+
+    def _pycgfx_open(self):
+        return self.pycgfx_win is not None and self.pycgfx_win.win.winfo_exists()
+
+    def open_pycgfx_setup(self):
+        if self._pycgfx_open():
+            self.pycgfx_win.win.deiconify()
+            self.pycgfx_win.win.lift()
+            return
+        self.pycgfx_win = pycgfx_window.PycgfxWindow(self, self._pycgfx_ready)
+
+    def _pycgfx_ready(self):
+        self.missing = self.check_tools()
+        self.validate()
+
+    def show_missing_error(self, items=None):
+        short = "\n".join(paths.rel(p) for p in (items or self.missing))
         messagebox.showerror(
             "YANBF-CBC - missing files",
             "These required files are missing:\n\n" + short,
@@ -1338,11 +1391,11 @@ class App:
     def start_build(self):
         if self.worker is not None and self.worker.is_alive():
             return
-        self.missing = paths.find_missing()
+        self.missing = self.find_missing()
         if self.missing:
             self.check_tools()
             self.validate()
-            self.show_missing_error()
+            self.report_missing()
             return
         if not self.validate():
             return
@@ -1384,9 +1437,8 @@ def main():
     root = tk.Tk()
     root.withdraw()
     app = App(root)
-    if app.missing:
-        app.show_missing_error()
     root.deiconify()
+    root.after_idle(app.startup_checks)
     root.mainloop()
 
 

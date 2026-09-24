@@ -30,7 +30,7 @@ YANBF-CBC/
 ├── banner.blend           ← Blender template for 3D banners (also bundled in the exe; Template… button)
 ├── app/                   ← source code
 ├── patches/               ← this project's fixes to pycgfx (the repository doesn't contain pycgfx itself)
-└── scripts/get_pycgfx.py  ← sets up processes/YANBF/pycgfx/ from upstream + the patch
+└── scripts/get_pycgfx.py  ← sets up processes/YANBF/pycgfx/ from the command line (the app offers it too)
 ```
 
 `YANBF-CBC.exe` finds everything relative to **its own folder**, not the
@@ -45,20 +45,35 @@ current working directory. If you move it, move `processes/` with it.
 | `processes/Project_CTR/cwavtool.exe` | [cwavtool](https://github.com/PabloMK7/cwavtool) (PabloMK7) |
 | `processes/YANBF/generator/data/forwarder.elf` | [YANBF](https://github.com/YANBForwarder/YANBF) release asset (pre-compiled forwarder stub) |
 | `processes/YANBF/generator/data/build-cia.rsf` | [YANBF](https://github.com/YANBForwarder/YANBF) generator (included) |
-| `processes/YANBF/pycgfx/main.py` + `cgfx/` | [skyfloogle/pycgfx](https://github.com/skyfloogle/pycgfx), **patched**. Not in the repository: run `python scripts/get_pycgfx.py` (see below) |
+| `processes/YANBF/pycgfx/main.py` + `cgfx/` | [skyfloogle/pycgfx](https://github.com/skyfloogle/pycgfx) version `1f78850`, **patched**. Not in the repository: the program sets it up (see below) |
 
 See [Credits](#credits) for authors and licenses.
 
+### Setting up pycgfx
+
 **pycgfx** has no license that allows sharing it, so the repository holds only
 this project's two fixes, as `patches/pycgfx.patch`. The fixes are explained
-in `patches/pycgfx-PATCH_NOTES.txt`. `scripts/get_pycgfx.py` does the rest:
+in `patches/pycgfx-PATCH_NOTES.txt`. When pycgfx isn't there, the program opens
+a **Set up pycgfx** window at startup, and again if you press Build. It says
+which exact version to use (commit `1f78850`, 2 June 2025), and offers two
+ways to set it up:
 
-- it downloads pycgfx from GitHub at the tested commit (`1f78850`);
-- it applies the patch;
-- it checks the result byte for byte (SHA-256) against the tested version;
-- it installs it in `processes/YANBF/pycgfx/`.
+- **Automatic (recommended):** downloads that version's zip, about 3.2 MB,
+  straight from skyfloogle's GitHub. It applies the fixes and checks every
+  file byte for byte (SHA-256) against the tested version, then installs it
+  in `processes/YANBF/pycgfx/`. It doesn't need git.
+- **By hand:**
+  1. The window links that version's zip.
+  2. Copy `main.py`, `banner-camera.gltf` and the `cgfx` folder into the
+     folder shown. Dropping the zip itself there, or the whole unzipped
+     folder, works too.
+  3. Press **Check again**. The program checks the version and adds the
+     fixes itself.
 
-It needs git. Run it once after cloning:
+Any other version of pycgfx is rejected, and the window names the files that
+don't match. Once pycgfx checks out, the window doesn't appear again unless
+the files are deleted or changed. `scripts/get_pycgfx.py` does the same
+automatic setup from the command line, for example on a build machine:
 
 ```bat
 python scripts\get_pycgfx.py
@@ -67,10 +82,13 @@ python scripts\get_pycgfx.py
 Don't replace the patched copy with stock pycgfx: without the fixes, the
 `name`/`nameModel` logo doesn't billboard and some banners crash on hardware.
 
-On startup the program checks for all of these. If anything is missing it
-shows one error box listing the short paths (relative to the program's
-folder), puts the full paths in the log and disables **Build CIA**. It checks
-again when you press Build.
+### Startup check
+
+On startup the program checks for all of these. If pycgfx is missing, it
+opens the setup window above. If anything else is missing, it shows one
+error box listing the short paths (relative to the program's folder) and
+puts the full paths in the log. Either way, **Build CIA** is disabled until
+everything is in place. It checks again when you press Build.
 
 ## Fields
 
@@ -320,15 +338,15 @@ The change applies immediately, with no restart. The choice is saved in
 ## Running from source
 
 ```bat
-cd YANBF-CBC
-py -3.14 scripts\get_pycgfx.py
-cd app
+cd YANBF-CBC\app
 py -3.14 -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python yanbf_cbc.py
 ```
 
-`get_pycgfx.py` is only needed once, after cloning the repository.
+On a fresh clone, the first start opens the **Set up pycgfx** window (see
+[Setting up pycgfx](#setting-up-pycgfx)). You can also run
+`scripts\get_pycgfx.py` beforehand.
 
 ## Tests
 
@@ -339,7 +357,7 @@ app\.venv\Scripts\python -m pip install -r tests\requirements-dev.txt
 app\.venv\Scripts\python tests\run_all.py
 ```
 
-`run_all.py` runs the 14 suites in `tests/suite_*.py`, each in its own process,
+`run_all.py` runs the 15 suites in `tests/suite_*.py`, each in its own process,
 and prints one line per suite. Useful options:
 
 - `run_all.py nds ftp` runs just those suites;
