@@ -174,6 +174,31 @@ check([w.tree.item(i, "text") for i in w.tree.get_children()] == ["3ds/"], "brow
 w.go_up(); pump(lambda: w.cur_dir == "/" and not w.busy())
 check(w.cur_dir == "/", "Up")
 
+print("progress text fits (window at its minimum size)")
+import tkinter.font as tkfont
+root.deiconify(); w.win.deiconify(); w.win.geometry("760x640")  # shown for real: hidden windows have no width
+for _ in range(5):
+    root.update()
+worst = [  # (sent, total, bytes/s) giving the longest texts: sizes up to 1023.9 MB, slow speeds -> h:mm:ss left
+    (1073636966, 1073636966 * 1.0, 1048371), (104857600, 1073636966, 1048371), (1023 * 1024, 1073636966, 1023 * 1024),
+    (1023 * 1024, 1073636966, 100 * 1024), (500, 1073636966, 900.5),
+]
+from ftp_window import _eta
+check((_eta(42), _eta(185), _eta(3725), _eta(1192331)) == ("42 s", "3:05", "1:02:05", "331:12:11"),
+      "time left: s, m:ss, then h:mm:ss")
+for key in ("cia", "nds"):
+    lbl = w.rows[key]["prog"]
+    font = tkfont.Font(font=lbl.cget("font") or "TkDefaultFont")
+    for sent, total, bps in worst:
+        w._on_progress((key, sent, int(total), bps)); root.update()
+        text = lbl.cget("text")
+        check(font.measure(text) <= lbl.winfo_width(), f"{key}: fits ({font.measure(text)} <= {lbl.winfo_width()} px): {text}")
+    w._on_file((key, "ok", f"Done - {ftp3ds.human_size(1073636966)} in 1234.5 s ({ftp3ds.human_size(1023 * 1024)}/s)"))
+    root.update()
+    text = lbl.cget("text")
+    check(font.measure(text) <= lbl.winfo_width(), f"{key}: done message fits: {text}")
+    check(w.rows[key]["bar"].winfo_width() >= 200, f"{key}: progress bar still {w.rows[key]['bar'].winfo_width()} px wide")
+
 print("theme switch with the window open")
 app.theme_var.set("Dark"); app._on_theme_pick(); root.update()
 check(w.host_entry.cget("bg") == g.theme.DARK.field_bg, "entries follow the theme")

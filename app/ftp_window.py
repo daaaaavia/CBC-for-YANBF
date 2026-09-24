@@ -24,6 +24,7 @@ import settings
 import theme
 
 KEYS = ("cia", "nds")
+PROGRESS_CHARS = 48  # width of the progress text beside each bar (size, speed, time left)
 
 
 class SendWindow:
@@ -145,7 +146,8 @@ class SendWindow:
             prog.columnconfigure(0, weight=1)
             row["bar"] = ttk.Progressbar(prog, maximum=1000, value=0)
             row["bar"].grid(row=0, column=0, sticky="ew")
-            row["prog"] = self._caption(prog, width=34)
+            # wide enough for the longest text, e.g. "1023.9 MB / 1023.9 MB  ·  1023.9 KB/s  ·  59:59 left"
+            row["prog"] = self._caption(prog, width=PROGRESS_CHARS)
             row["prog"].grid(row=0, column=1, sticky="w", padx=(8, 0))
             r += 1
             self.rows[key] = row
@@ -667,5 +669,10 @@ def _size(path):
 
 
 def _eta(seconds):
+    """'42 s', '3:05' or '1:02:05' (h:mm:ss)."""
     s = int(seconds + 0.5)
-    return f"{s // 60}:{s % 60:02d}" if s >= 60 else f"{s} s"
+    if s < 60:
+        return f"{s} s"
+    if s < 3600:
+        return f"{s // 60}:{s % 60:02d}"
+    return f"{s // 3600}:{s // 60 % 60:02d}:{s % 60:02d}"
