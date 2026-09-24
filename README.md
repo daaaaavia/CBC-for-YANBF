@@ -1,6 +1,6 @@
 # YANBF-CBC — YANBF Custom Banner CIA builder
 
-A single-window Windows tool that turns an icon, a banner (3D `.glb` model or
+A single-window tool for Windows and macOS that turns an icon, a banner (3D `.glb` model or
 flat `.png`), optional audio and a few text fields into an installable 3DS
 `.cia` forwarder for an NDS ROM (via YANBF's `forwarder.elf` / nds-bootstrap).
 
@@ -13,6 +13,10 @@ One button runs the whole pipeline:
 5. **CIA** – `makerom` with `build-cia.rsf` + `forwarder.elf` → `{name}.cia`
 
 Audio runs before the banner step because `makebanner` needs `audio.cwav`.
+
+**Downloads:** see the repository's **Releases** page. There's a Windows zip and
+two Mac zips, one for Apple Silicon (M1 and later) and one for Intel. On a Mac,
+read [macOS](#macos) first.
 
 ## Folder layout
 
@@ -335,6 +339,42 @@ The change applies immediately, with no restart. The choice is saved in
 `settings.json` and used every time the program starts. All colours live in
 `app/theme.py`.
 
+## macOS
+
+The Mac app works like the Windows one. The differences:
+
+- **Download:** unzip `YANBF-CBC-…-macOS-AppleSilicon.zip` (M-series Macs) or
+  `…-macOS-Intel.zip` and move `YANBF-CBC.app` to Applications. The tools
+  (`makerom`, `ctrtool`, `bannertool`, `cwavtool`) are inside the app, built for
+  macOS.
+- **First launch:** the app is only ad-hoc signed, not notarized by Apple, so
+  macOS blocks it the first time. Open it once, then go to **System Settings →
+  Privacy & Security** and press **Open Anyway**. On older macOS versions,
+  right-click the app and choose **Open** → **Open** instead. Or, in Terminal:
+  `xattr -dr com.apple.quarantine /Applications/YANBF-CBC.app`
+- **pycgfx is not included, so download it by hand.** The Mac app never
+  downloads it for you, so the **Set up pycgfx** window shows only the manual
+  steps:
+  1. Download exactly version `1f78850` (2 June 2025) from the link in the
+     window. Don't use the green Code button on the main page, which gives
+     the newest version.
+  2. Put `main.py`, `banner-camera.gltf` and the `cgfx` folder (or the zip
+     itself, or the unzipped folder) in
+     `~/Library/Application Support/YANBF-CBC/pycgfx`. **Show in Finder** opens
+     that folder.
+  3. Press **Check again**. The app checks the version and adds its two fixes.
+- **Where things are kept:** a Mac app can't write inside itself, so
+  `settings.json` and `unique_ids.json` are in
+  `~/Library/Application Support/YANBF-CBC/`. Built CIAs go to
+  `~/Documents/YANBF-CBC/output/`.
+- **Drag and drop** from Finder uses tkinterdnd2 (tkdnd), which is bundled in
+  the app. **Audio preview** uses macOS's built-in `afplay`. **Appearance:**
+  *System* follows macOS's light or dark mode. Title bars always follow
+  macOS itself.
+
+Everything else is the same, including the HOME Menu preview, Send to 3DS
+and the Blender template.
+
 ## Running from source
 
 ```bat
@@ -344,9 +384,22 @@ py -3.14 -m venv .venv
 .venv\Scripts\python yanbf_cbc.py
 ```
 
+On a Mac (with Python 3.14 from python.org, which includes Tk):
+
+```sh
+cd YANBF-CBC/app
+python3.14 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python yanbf_cbc.py
+```
+
+In source mode, the Mac tools must be in `processes/Project_CTR/` with no
+`.exe` extension. The GitHub Actions workflow shows how to get or build them.
+
 On a fresh clone, the first start opens the **Set up pycgfx** window (see
 [Setting up pycgfx](#setting-up-pycgfx)). You can also run
-`scripts\get_pycgfx.py` beforehand.
+`scripts/get_pycgfx.py` beforehand. From source, pycgfx lives in
+`processes/YANBF/pycgfx/` on both systems.
 
 ## Tests
 
@@ -357,7 +410,7 @@ app\.venv\Scripts\python -m pip install -r tests\requirements-dev.txt
 app\.venv\Scripts\python tests\run_all.py
 ```
 
-`run_all.py` runs the 15 suites in `tests/suite_*.py`, each in its own process,
+`run_all.py` runs the 16 suites in `tests/suite_*.py`, each in its own process,
 and prints one line per suite. Useful options:
 
 - `run_all.py nds ftp` runs just those suites;
@@ -381,6 +434,10 @@ A few things to know:
   `processes/` and checks them with ctrtool.
 - **Windows only:** `suite_dragdrop` sends real Windows drop messages. On
   other systems it reports *skipped*.
+- **Both systems:** `suite_platform` switches `sys.platform` to test the Mac
+  behaviour on Windows and the Windows behaviour on a Mac. It covers tool
+  names, where a packaged `.app` looks for files, the audio and *open*
+  commands, dark mode, tkdnd drops and the manual-only pycgfx window.
 - **pyftpdlib:** `suite_ftp` needs it (from `requirements-dev.txt`). It's only
   for the tests, not the app.
 
@@ -399,6 +456,30 @@ copy /y dist\YANBF-CBC.exe ..\YANBF-CBC.exe
 are blocked. The exe is about 21 MB. pycgfx is **not** bundled. It's loaded
 from `processes/YANBF/pycgfx/main.py` at run time, so `processes/` must stay
 next to the exe.
+
+### Building the Mac app, and releases (GitHub Actions)
+
+`.github/workflows/build.yml` builds and tests all three versions on GitHub:
+Windows, macOS Apple Silicon and macOS Intel. Every tool version it uses is
+pinned at the top of the file.
+
+- **Run by hand:** go to **Actions → Build → Run workflow**. The zips are
+  saved as the run's artifacts.
+- **Release:** push a tag, e.g. `git tag v1.0.0` then
+  `git push origin v1.0.0`. The workflow then publishes a GitHub release with
+  the three zips and `.github/release-notes.md`.
+
+On macOS it installs Python from python.org and downloads the macOS builds of
+makerom and ctrtool from the Project_CTR releases. It compiles bannertool and
+cwavtool from source. It then runs the tests, builds `YANBF-CBC.app` with
+PyInstaller (`--windowed`), copies `processes/` into
+`Contents/Resources/processes` (Mac tools, without pycgfx), ad-hoc signs the app
+and checks it with `YANBF-CBC --check-tools`. Every job fails if a pycgfx file
+ends up in a zip. pycgfx is downloaded only to run the tests.
+
+`YANBF-CBC --check-tools [report.txt]` prints the folders the app uses, what's
+missing and the first line from each tool, then exits without opening a
+window. A Windows exe has no console, so give it a file name.
 
 ## Bitdefender note
 
@@ -478,3 +559,11 @@ A collection of 3DS tools. YANBF-CBC uses:
   shows the title ID and product code.
 
 GitHub shows no license for this repository; see it for terms.
+
+### tkinterdnd2 and tkdnd (Mac version only)
+<https://github.com/Eliav2/tkinterdnd2> (originally by **pmgagne**) and
+<https://github.com/petasis/tkdnd> by **Georgios Petasis**
+
+Drag and drop from Finder in the macOS app. The Windows version uses its own
+built-in drag and drop instead. License: **MIT** (tkinterdnd2) and
+**BSD-style** (tkdnd).
