@@ -1,0 +1,11 @@
+# Same line endings on Windows and macOS (the pycgfx patch and its hash expect LF).
+* text=auto eol=lf
+*.bat text eol=crlf
+
+*.exe binary
+*.elf binary
+*.blend binary
+*.bcmdl binary
+*.wav binary
+*.png binary
+*.glb binary

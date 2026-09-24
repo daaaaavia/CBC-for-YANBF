@@ -1,0 +1,24 @@
+diff --git a/main.py b/main.py
+index 86057cf..f2f4789 100755
+--- a/main.py
++++ b/main.py
+@@ -420,6 +420,8 @@ def make_bones(
+         node = gltf.model.nodes[node_id]
+         bone = Bone()
+         bone.name = node.name or f"Node {node_id}"
++        if bone.name == "name" or bone.name == "nameModel":
++            bone.billboard_mode = BillboardMode.YAxial
+         bone_dict.add(bone.name, bone)
+         bone.joint_id = node_id
+         bone.flags = (
+@@ -760,8 +762,9 @@ def convert_gltf(gltf: gltflib.GLTF) -> CGFX:
+                 )
+             sobj_mesh = SOBJMesh(cmdl)
+             cmdl.meshes.add(sobj_mesh)
++            sobj_mesh.mesh_node_name = cmdl.skeleton.bones[node_to_bone[node_id]]
+             sobj_mesh.name = (
+-                (mesh.name or cmdl.skeleton.bones[node_to_bone[node_id]])
++                (mesh.name or sobj_mesh.mesh_node_name)
+                 + "_"
+                 + mtob.name
+             )

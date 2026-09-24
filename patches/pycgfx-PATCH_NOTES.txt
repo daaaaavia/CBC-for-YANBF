@@ -1,0 +1,10 @@
+This main.py is a PATCHED version of skyfloogle/pycgfx, not the stock release.
+
+Two fixes applied vs. the original:
+1. Every SOBJMesh now gets mesh_node_name set (was left blank in stock pycgfx).
+2. Any bone literally named "name" or "nameModel" gets YAxial billboard mode
+   applied automatically (stock pycgfx never sets this).
+
+Both were required to get a working, non-crashing, non-spinning billboard
+logo on real 3DS hardware. Do not replace this with the stock pycgfx
+main.py unless you re-apply these two fixes.

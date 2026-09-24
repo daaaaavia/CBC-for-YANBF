@@ -1,0 +1,35 @@
+# --- personal data: never commit ---
+/settings.json
+/unique_ids.json
+/output/
+*.nds
+*.cia
+*.part
+
+# --- not allowed in the repository (no license to share them) ---
+# pycgfx: rebuilt from upstream + patches/pycgfx.patch by scripts/get_pycgfx.py
+/processes/YANBF/pycgfx/
+# the real HOME Menu screenshot (Nintendo artwork); home_bg.py draws a plain backdrop without it
+/app/home_bg_screenshot.py
+
+# --- builds and local environment ---
+/YANBF-CBC.exe
+/app/.venv/
+/app/build/
+/app/dist/
+/app/*.spec
+/app/build.log
+__pycache__/
+*.pyc
+
+# --- local working files ---
+*.blend1
+/banner.glb
+/.banner_history/
+
+# --- user guide: kept out until it's decided whether it stays ---
+# (its HOME Menu screenshot also shows the Nintendo backdrop)
+/USER_GUIDE.md
+/USER_GUIDE.html
+/docs/
+/app/make_guide_html.py
