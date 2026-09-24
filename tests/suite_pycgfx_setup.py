@@ -152,6 +152,8 @@ check(app.pycgfx_win is None and app.missing == [], "set up -> the window doesn'
 app._on_close()
 
 print("automatic download")
+if sys.platform == "darwin":  # the Mac app only offers the manual steps (see suite_platform)
+    finish()
 shutil.rmtree(D)
 calls = []
 

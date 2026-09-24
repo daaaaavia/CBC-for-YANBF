@@ -1,6 +1,9 @@
 """'Set up pycgfx' window: shown at startup when processes/YANBF/pycgfx/ isn't the
 tested version (see pycgfx_setup). Offers an automatic download or step-by-step
-manual placement, and stays away once the files check out."""
+manual placement, and stays away once the files check out.
+
+On macOS only the manual option is shown: the Mac app doesn't download pycgfx for
+the user. The files go in ~/Library/Application Support/YANBF-CBC/pycgfx there."""
 
 import os
 import queue
@@ -11,6 +14,7 @@ import webbrowser
 from tkinter import ttk
 
 import paths
+import platform_util as pu
 import pycgfx_setup as ps
 import theme
 
@@ -23,6 +27,8 @@ class PycgfxWindow:
         self.cancel = threading.Event()
         self.worker = None
         self._status = ("", "hint")
+        self.auto = not pu.is_mac()  # the Mac app never downloads pycgfx itself
+        self.auto_btn = self.bar = None
         root = app.root
 
         win = self.win = tk.Toplevel(root)
@@ -66,24 +72,25 @@ class PycgfxWindow:
         for lbl in self._warn_labels:
             lbl.pack(anchor="w", fill="x")
 
-        # option 1: automatic
-        ttk.Separator(f).pack(fill="x", pady=(14, 10))
-        ttk.Label(f, text="Option 1 - automatic (recommended)", font=bold).pack(anchor="w")
         cap = lambda parent, text: self.app._reg(ttk.Label(parent, text=text, wraplength=wrap, justify="left",
                                                            foreground=theme.current.caption_fg), "caption")
-        cap(f, f"Downloads version {ps.SHORT} (about {ps.ZIP_SIZE / 1048576:.1f} MB) from {ps.REPO}, "
-               "adds the fixes and puts the files in the right place.").pack(anchor="w", pady=(2, 6))
-        row = ttk.Frame(f)
-        row.pack(fill="x")
-        self.auto_btn = ttk.Button(row, text="Download and set up automatically", style="Accent.TButton",
-                                   command=self.start_download)
-        self.auto_btn.pack(side="left")
-        self.bar = ttk.Progressbar(row, maximum=1000, value=0, length=230)
-        self.bar.pack(side="left", padx=(12, 0))
+        if self.auto:
+            # option 1: automatic
+            ttk.Separator(f).pack(fill="x", pady=(14, 10))
+            ttk.Label(f, text="Option 1 - automatic (recommended)", font=bold).pack(anchor="w")
+            cap(f, f"Downloads version {ps.SHORT} (about {ps.ZIP_SIZE / 1048576:.1f} MB) from {ps.REPO}, "
+                   "adds the fixes and puts the files in the right place.").pack(anchor="w", pady=(2, 6))
+            row = ttk.Frame(f)
+            row.pack(fill="x")
+            self.auto_btn = ttk.Button(row, text="Download and set up automatically", style="Accent.TButton",
+                                       command=self.start_download)
+            self.auto_btn.pack(side="left")
+            self.bar = ttk.Progressbar(row, maximum=1000, value=0, length=230)
+            self.bar.pack(side="left", padx=(12, 0))
 
-        # option 2: by hand
+        # option 2 (the only one on a Mac): by hand
         ttk.Separator(f).pack(fill="x", pady=(14, 10))
-        ttk.Label(f, text="Option 2 - by hand", font=bold).pack(anchor="w")
+        ttk.Label(f, text="Option 2 - by hand" if self.auto else "Download it by hand", font=bold).pack(anchor="w")
         steps = ttk.Frame(f)
         steps.pack(fill="x", pady=(4, 0))
         steps.columnconfigure(1, weight=1)
@@ -109,7 +116,8 @@ class PycgfxWindow:
         e = tk.Entry(prow, textvariable=self.path_var, state="readonly", width=62,
                      readonlybackground=theme.current.field_bg, **theme.current.entry_opts)
         self.app._reg(e, "entry")
-        ttk.Button(prow, text="Open folder", command=self.open_folder).pack(side="right", padx=(6, 0))
+        ttk.Button(prow, text="Open folder" if pu.is_windows() else f"Show in {pu.file_manager()}",
+                   command=self.open_folder).pack(side="right", padx=(6, 0))
         e.pack(side="left", fill="x", expand=True, ipady=2)
         e.xview_moveto(1.0)  # a long path shows its end (the pycgfx folder), not the drive
 
@@ -152,16 +160,17 @@ class PycgfxWindow:
         else:
             listed = ", ".join(problems[:4]) + (f" and {len(problems) - 4} more" if len(problems) > 4 else "")
             self._set_status(f"The files in the folder aren't pycgfx version {ps.SHORT} "
-                             f"(missing or different: {listed}). Use the exact version linked above, or the "
-                             "automatic option (it replaces them).", "bad")
+                             f"(missing or different: {listed}). Use the exact version linked above"
+                             + (", or the automatic option (it replaces them)." if self.auto else "."), "bad")
         return False
 
     def _done(self):
         self._set_status(f"pycgfx {ps.SHORT} is set up, with the fixes. You can build CIAs now.", "ok")
-        self.auto_btn.configure(state="disabled")
+        self._set_auto("disabled")
         self.check_btn.configure(state="disabled")
         self.close_btn.configure(text="Done")
-        self.bar.configure(value=1000)
+        if self.bar is not None:
+            self.bar.configure(value=1000)
         self.on_ready()
 
     def restyle(self):
@@ -171,13 +180,17 @@ class PycgfxWindow:
         for lbl in self._warn_labels:
             lbl.configure(bg=theme.current.warn_bg, fg=theme.current.warn_fg)
 
+    def _set_auto(self, state):
+        if self.auto_btn is not None:
+            self.auto_btn.configure(state=state)
+
     def busy(self):
         return self.worker is not None and self.worker.is_alive()
 
     # ------------------------------------------------------------------ actions
     def open_folder(self):
         os.makedirs(paths.PYCGFX_DIR, exist_ok=True)
-        os.startfile(paths.PYCGFX_DIR)
+        pu.open_path(paths.PYCGFX_DIR)
 
     def check_again(self):
         if self.busy():
@@ -195,10 +208,10 @@ class PycgfxWindow:
             self.win.bell()
 
     def start_download(self):
-        if self.busy():
+        if self.busy() or not self.auto:
             return
         self.cancel.clear()
-        self.auto_btn.configure(state="disabled")
+        self._set_auto("disabled")
         self.check_btn.configure(state="disabled")
         self.bar.configure(value=0)
         self._set_status(f"Downloading pycgfx {ps.SHORT} from GitHub…", "busy")
@@ -234,7 +247,7 @@ class PycgfxWindow:
                     self.refresh()
                 elif kind == "error":
                     self.bar.configure(value=0)
-                    self.auto_btn.configure(state="normal")
+                    self._set_auto("normal")
                     self.check_btn.configure(state="normal")
                     self._set_status(data, "bad")
         except queue.Empty:

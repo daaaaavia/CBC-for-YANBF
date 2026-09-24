@@ -1,6 +1,7 @@
 """Appearance setting: System (default) / Light / Dark, saved, applied live; Light = original look."""
 import json
 import os
+import sys
 
 from _common import WINDOWS, check, finish, isolate, S
 import paths
@@ -62,6 +63,8 @@ if WINDOWS:  # Tk's own Windows defaults
     check(NATIVE == "vista", "native Windows ttk theme")
     check(light0["entry"][:4] == ("white", "SystemWindowText", "solid", 1), "fields as before")
     check(light0["log"][0] == "SystemWindow", "log background as before")
+elif sys.platform == "darwin":  # Tk's own macOS defaults
+    check(NATIVE == "aqua", "native macOS ttk theme")
 check(light0["log"][2] == "#1f4fbf", "log step colour as before")
 check(light0["preview_bg"] == (214, 218, 224), "preview colours as before")
 check(app.theme_var.get() == "Light", "picker shows Light")

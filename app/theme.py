@@ -13,8 +13,25 @@ import tkinter as tk
 from dataclasses import dataclass, field
 from tkinter import ttk
 
+import platform_util as pu
+
 PREFS = ("system", "light", "dark")
 PREF_LABELS = {"system": "System", "light": "Light", "dark": "Dark"}
+
+# Fonts: Tk silently falls back when a font is missing, but the Mac equivalents are
+# picked explicitly, and Mac point sizes run small, so they get +2.
+if sys.platform == "darwin":
+    UI_FONT, MONO_FONT, _PT = "Helvetica Neue", "Menlo", 2
+else:
+    UI_FONT, MONO_FONT, _PT = "Segoe UI", "Consolas", 0
+
+
+def _ui(size, *style):
+    return (UI_FONT, size + _PT, *style)
+
+
+def _mono(size, *style):
+    return (MONO_FONT, size + _PT, *style)
 
 
 @dataclass
@@ -70,19 +87,19 @@ LIGHT = Theme(
     caption_fg="#555555", hint_fg="#888888", info_fg="#1f4fbf",
     status_ok="#1a8a1a", status_bad="#c00000", status_busy="#1f4fbf",
     log_tags={
-        "step": {"foreground": "#1f4fbf", "background": "", "font": ("Consolas", 9, "bold")},
+        "step": {"foreground": "#1f4fbf", "background": "", "font": _mono(9, "bold")},
         "cmd": {"foreground": "#808080", "background": ""},
         "out": {"foreground": "#202020", "background": ""},
         "info": {"foreground": "#00808a", "background": ""},
         "ok": {"foreground": "#1a8a1a", "background": ""},
         "warn": {"foreground": "#b07800", "background": ""},
         "err": {"foreground": "#d00000", "background": ""},
-        "bigwarn": {"foreground": "white", "background": "#e06000", "font": ("Consolas", 9, "bold")},
-        "fail": {"foreground": "white", "background": "#c00000", "font": ("Consolas", 10, "bold")},
-        "done": {"foreground": "white", "background": "#1a8a1a", "font": ("Consolas", 10, "bold")},
+        "bigwarn": {"foreground": "white", "background": "#e06000", "font": _mono(9, "bold")},
+        "fail": {"foreground": "white", "background": "#c00000", "font": _mono(10, "bold")},
+        "done": {"foreground": "white", "background": "#1a8a1a", "font": _mono(10, "bold")},
     },
-    font_status=("Segoe UI", 9, "bold"),
-    font_mono=("Consolas", 9),
+    font_status=_ui(9, "bold"),
+    font_mono=_mono(9),
     entry_opts={"relief": "solid", "bd": 1},
     spin_opts={"relief": "solid", "bd": 1, "disabledforeground": "black"},
 )
@@ -108,19 +125,19 @@ DARK = Theme(
     caption_fg=D["sub"], hint_fg=D["dim"], info_fg=D["accent"],
     status_ok="#6ccb5f", status_bad="#ff99a4", status_busy=D["accent"],
     log_tags={
-        "step": {"foreground": D["accent"], "background": "", "font": ("Consolas", 9, "bold")},
+        "step": {"foreground": D["accent"], "background": "", "font": _mono(9, "bold")},
         "cmd": {"foreground": D["dim"], "background": ""},
         "out": {"foreground": "#dcdcdc", "background": ""},
         "info": {"foreground": "#4fd1c5", "background": ""},
         "ok": {"foreground": "#6ccb5f", "background": ""},
         "warn": {"foreground": "#f4d35e", "background": ""},
         "err": {"foreground": "#ff99a4", "background": ""},
-        "bigwarn": {"foreground": "white", "background": "#c2410c", "font": ("Consolas", 9, "bold")},
-        "fail": {"foreground": "white", "background": "#b3261e", "font": ("Consolas", 10, "bold")},
-        "done": {"foreground": "white", "background": "#2e7d32", "font": ("Consolas", 10, "bold")},
+        "bigwarn": {"foreground": "white", "background": "#c2410c", "font": _mono(9, "bold")},
+        "fail": {"foreground": "white", "background": "#b3261e", "font": _mono(10, "bold")},
+        "done": {"foreground": "white", "background": "#2e7d32", "font": _mono(10, "bold")},
     },
-    font_status=("Segoe UI", 9, "bold"),
-    font_mono=("Consolas", 9),
+    font_status=_ui(9, "bold"),
+    font_mono=_mono(9),
     # (bg / readonlybackground come from field_bg / lock_bg, which the GUI passes itself)
     entry_opts={"relief": "solid", "bd": 1, "fg": D["text"], "insertbackground": D["text"],
                 "disabledforeground": D["dim"],
@@ -152,7 +169,9 @@ current = LIGHT
 
 
 def system_is_dark():
-    """True if Windows is set to dark mode for apps."""
+    """True if Windows (apps) or macOS is set to dark mode."""
+    if pu.is_mac():
+        return pu.mac_is_dark()
     if sys.platform != "win32":
         return False
     try:

@@ -1,11 +1,16 @@
-"""Accept files dragged from Explorer onto a Tk window (Windows only, ctypes).
+"""Accept files dragged from Explorer / Finder onto a Tk window.
 
-Uses the classic WM_DROPFILES mechanism: DragAcceptFiles on the top-level
+Windows (ctypes, no extra packages) uses the classic WM_DROPFILES mechanism: DragAcceptFiles on the top-level
 window, whose window procedure is subclassed to catch the drop. Windows
 delivers drops over child widgets to the nearest ancestor that accepts files,
 so one registration covers the whole window. The callback receives the
 dropped paths and the drop point in screen coordinates; it runs inside the
 window procedure, so it should only queue work for the Tk loop.
+
+macOS (and Linux) use tkdnd through the tkinterdnd2 package, registered on the
+top-level window too; tkdnd passes a drop over a child widget up to it. The
+callback gets the same arguments. If tkinterdnd2 isn't installed, drag and drop
+is simply off (enabled stays False) and Browse still works.
 """
 
 import ctypes
@@ -19,9 +24,9 @@ MSGFLT_ALLOW = 1
 GWLP_WNDPROC = -4
 
 LRESULT = ctypes.c_ssize_t
-WNDPROC = ctypes.WINFUNCTYPE(LRESULT, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
 
 if sys.platform == "win32":
+    WNDPROC = ctypes.WINFUNCTYPE(LRESULT, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
     _user32 = ctypes.WinDLL("user32", use_last_error=True)
     _shell32 = ctypes.WinDLL("shell32", use_last_error=True)
 
@@ -46,6 +51,7 @@ class FileDropTarget:
         self.callback = callback
         self.enabled = False
         if sys.platform != "win32":
+            self._enable_tkdnd(toplevel)
             return
         toplevel.update_idletasks()
         self.hwnd = int(toplevel.wm_frame(), 16)
@@ -78,3 +84,21 @@ class FileDropTarget:
                 pass  # never let an exception escape a window procedure
             return 0
         return _user32.CallWindowProcW(self._old, hwnd, msg, wparam, lparam)
+
+    def _enable_tkdnd(self, toplevel):
+        try:
+            from tkinterdnd2 import TkinterDnD
+            TkinterDnD._require(toplevel)
+            toplevel.tk.call("tkdnd::drop_target", "register", toplevel, ("DND_Files",))
+        except Exception:
+            return
+        cmd = toplevel.register(lambda data, x, y: self._on_tkdnd_drop(toplevel, data, x, y))
+        toplevel.tk.call("bind", toplevel, "<<Drop:DND_Files>>", f"{cmd} %D %X %Y")
+        self.enabled = True
+
+    def _on_tkdnd_drop(self, toplevel, data, x, y):
+        try:
+            self.callback(list(toplevel.tk.splitlist(data)), int(x), int(y))
+        except Exception:
+            pass
+        return "copy"  # tells the source the drop was accepted

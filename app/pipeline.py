@@ -34,8 +34,7 @@ from PIL import Image
 
 import nds
 import paths
-
-CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+import platform_util as pu
 
 # Largest allowed .glb: the same limit pycgfx checks the converted CGFX against
 # (main.py write(): it warns when len(data) > 0x80000) - 524,288 bytes = 512 KB,
@@ -348,18 +347,29 @@ class Pipeline:
 
     def _run(self, step, args):
         self.log("cmd", "> " + subprocess.list2cmdline(args))
+        run = lambda: subprocess.run(
+            args,
+            capture_output=True,
+            stdin=subprocess.DEVNULL,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            **pu.popen_flags(),
+        )
         try:
-            r = subprocess.run(
-                args,
-                capture_output=True,
-                stdin=subprocess.DEVNULL,
-                creationflags=CREATE_NO_WINDOW,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
+            try:
+                r = run()
+            except PermissionError:
+                if pu.is_windows():
+                    raise
+                # a tool copied without its executable bit: add it and try once more
+                os.chmod(args[0], os.stat(args[0]).st_mode | 0o111)
+                r = run()
         except OSError as ex:
             self.log("err", f"Could not start {args[0]}: {ex}")
+            if pu.is_mac():
+                self.log("err", "If macOS blocked it, open Terminal and run: xattr -dr com.apple.quarantine "
+                                "followed by the path of YANBF-CBC.app, then try again.")
             raise StepFailed(step)
         for line in (r.stdout or "").splitlines():
             self.log("out", line)

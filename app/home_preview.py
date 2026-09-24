@@ -15,12 +15,12 @@ It's rendered from the .glb (the source of the .cgfx), not from the .cgfx itself
 import math
 import time
 import tkinter as tk
-import winsound
 from tkinter import ttk
 
 from PIL import Image, ImageChops, ImageDraw, ImageTk
 
 import home_bg
+import platform_util as pu
 import preview
 import theme
 
@@ -74,6 +74,7 @@ class HomeMenuPreview:
         self.angle = 0.0
         self.running = True
         self.closed = False
+        self.player = pu.AudioPlayer()
         self._last = time.perf_counter()
         self._fps = []
         self._photo = None
@@ -121,10 +122,7 @@ class HomeMenuPreview:
 
     def close(self):
         self.closed = True
-        try:
-            winsound.PlaySound(None, 0)
-        except RuntimeError:
-            pass
+        self.player.stop()
         self.win.destroy()
 
     # ------------------------------------------------------------------ controls
@@ -141,7 +139,7 @@ class HomeMenuPreview:
         if not self.audio_path:
             return
         try:
-            winsound.PlaySound(self.audio_path, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+            self.player.play(self.audio_path)
         except RuntimeError:
             pass
 

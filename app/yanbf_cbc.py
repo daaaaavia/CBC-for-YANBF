@@ -3,12 +3,12 @@
 import os
 import queue
 import shutil
+import sys
 import threading
 import time
 import tkinter as tk
 import tkinter.font as tkfont
 import webbrowser
-import winsound
 from tkinter import filedialog, messagebox, ttk
 
 # Imported here too so PyInstaller bundles what the disk-loaded pycgfx needs.
@@ -22,6 +22,7 @@ import home_preview
 import nds
 import paths
 import pipeline as pl
+import platform_util as pu
 import preview
 import pycgfx_setup
 import pycgfx_window
@@ -88,6 +89,10 @@ CREDITS = [
      "by": "3DSGuy (forked from bkifft/Project_CTR)",
      "what": "makerom builds the .cia; ctrtool is included for checking finished CIAs.",
      "license": "no license shown on GitHub - see the repository"},
+    {"name": "tkinterdnd2 + tkdnd (Mac version only)", "url": "https://github.com/Eliav2/tkinterdnd2",
+     "by": "Eliav2 and pmgagne (tkinterdnd2); Georgios Petasis (tkdnd)",
+     "what": "Drag and drop from Finder in the macOS app. The Windows version doesn't use them.",
+     "license": "MIT (tkinterdnd2) / BSD-style (tkdnd)"},
 ]
 
 # Fields that a .nds can fill in: key -> (label, check(value) -> error or None)
@@ -127,6 +132,7 @@ class App:
         self._audio_path = None
         self._audio_seconds = 0.0
         self._play_token = 0
+        self.player = pu.AudioPlayer()
         self.settings = settings.load()
         self._uid_suggestion = None  # (hex, reused) last filled in from a .nds
         self._nds_game_code = None
@@ -179,8 +185,11 @@ class App:
         self.drop_target = dragdrop.FileDropTarget(
             self.root, lambda p, x, y: self.queue.put(("__drop__", (p, x, y))))
         if self.drop_target.enabled:
-            self.log("info", "Tip: drag files from Explorer onto the ROM, icon, banner or audio rows "
+            self.log("info", f"Tip: drag files from {pu.file_manager()} onto the ROM, icon, banner or audio rows "
                              "(or their previews), or drop several at once anywhere in the window.")
+        elif not pu.is_windows():
+            self.log("info", "Tip: drag and drop needs the tkinterdnd2 package (pip install tkinterdnd2); "
+                             "Browse works without it.")
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self):
@@ -606,15 +615,27 @@ class App:
         if not self._audio_path:
             return
         try:
-            winsound.PlaySound(self._audio_path, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+            self.player.play(self._audio_path)
         except RuntimeError as ex:
-            self.audio_preview_info.configure(text=f"Windows can't play this file: {ex}")
+            self.audio_preview_info.configure(text=f"Can't play this file: {ex}")
             return
         self._play_token += 1
         token = self._play_token
         self.play_btn.configure(text="■ Stop")
-        ms = int(self._audio_seconds * 1000) + 250 if self._audio_seconds else 3000
-        self.root.after(ms, lambda: self._play_ended(token))
+        if self.player.playing() is None:
+            # winsound can't say when it's done: time the clip
+            ms = int(self._audio_seconds * 1000) + 250 if self._audio_seconds else 3000
+            self.root.after(ms, lambda: self._play_ended(token))
+        else:
+            self.root.after(200, lambda: self._watch_play(token))
+
+    def _watch_play(self, token):
+        if token != self._play_token:
+            return
+        if self.player.playing():
+            self.root.after(200, lambda: self._watch_play(token))
+        else:
+            self._play_ended(token)
 
     def _play_ended(self, token):
         if token == self._play_token:
@@ -622,10 +643,7 @@ class App:
 
     def _stop_audio(self):
         self._play_token += 1
-        try:
-            winsound.PlaySound(None, 0)
-        except RuntimeError:
-            pass
+        self.player.stop()
         self.play_btn.configure(text="▶ Play")
 
     def _home_open(self):
@@ -1430,10 +1448,41 @@ class App:
     def open_output(self):
         target = self.last_out_dir if self.last_out_dir and os.path.isdir(self.last_out_dir) else paths.OUTPUT_DIR
         os.makedirs(target, exist_ok=True)
-        os.startfile(target)
+        pu.open_path(target)
+
+
+def check_tools_report():
+    """`YANBF-CBC --check-tools [report.txt]`: where the program looks for everything,
+    what's missing, and the first line each native tool prints - no window. Used by
+    the release builds to check a packaged app (a windowed exe has no console, so it
+    can write to a file instead). Exit code 1 if anything other than pycgfx is missing."""
+    import subprocess
+    lines = [f"program folder: {paths.BASE_DIR}", f"settings + IDs: {paths.DATA_DIR}",
+             f"output: {paths.OUTPUT_DIR}", f"pycgfx: {paths.PYCGFX_DIR}"]
+    for tool in (paths.CTRTOOL, paths.MAKEROM, paths.BANNERTOOL, paths.CWAVTOOL):
+        try:
+            r = subprocess.run([tool], capture_output=True, text=True, errors="replace", timeout=20,
+                               stdin=subprocess.DEVNULL, **pu.popen_flags())
+            first = next((l.strip() for l in (r.stdout + r.stderr).splitlines() if l.strip()), "")
+            lines.append(f"runs: {os.path.basename(tool)}: {first}")
+        except (OSError, subprocess.SubprocessError) as ex:
+            lines.append(f"can't run: {os.path.basename(tool)}: {ex}")
+    missing = App.find_missing()
+    lines += [f"missing: {p}" for p in missing]
+    text = "\n".join(lines) + "\n"
+    args = sys.argv[sys.argv.index("--check-tools") + 1:]
+    if args:
+        with open(args[0], "w", encoding="utf-8") as f:
+            f.write(text)
+    elif sys.stdout is not None:
+        sys.stdout.write(text)
+    others = [p for p in missing if not p.startswith(paths.PYCGFX_DIR)]
+    return 1 if others or any(l.startswith("can't run") for l in lines) else 0
 
 
 def main():
+    if "--check-tools" in sys.argv:
+        sys.exit(check_tools_report())
     root = tk.Tk()
     root.withdraw()
     app = App(root)

@@ -1,0 +1,235 @@
+# Builds YANBF-CBC for Windows and macOS (Apple Silicon and Intel), runs the tests
+# on each, and - when a tag like v1.0.0 is pushed - publishes a GitHub release with
+# the three zips.
+#
+#   Run by hand:  Actions > Build > Run workflow   (zips are kept as build artifacts)
+#   Release:      git tag v1.0.0 && git push origin v1.0.0
+#
+# pycgfx isn't included in any zip (no license to share it). It's downloaded here only
+# to run the tests; the Windows app downloads it on first start (or the user places it),
+# and Mac users download it by hand. Each job fails if a pycgfx file ends up in a zip.
+
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.14.7"
+  # Native tools for macOS - exact versions, so builds are reproducible. The Windows
+  # .exe builds of the same versions are in processes/Project_CTR/.
+  MAKEROM_TAG: makerom-v0.19.0     # 3DSGuy/Project_CTR release (prebuilt macOS binaries)
+  CTRTOOL_TAG: ctrtool-v1.3.0      # 3DSGuy/Project_CTR release (prebuilt macOS binaries)
+  BANNERTOOL_REPO: Epicpkmn11/bannertool
+  BANNERTOOL_COMMIT: e21f280f0336b6e9dfa5a8a76684c9cea2bd0d3b  # tag v1.2.2, built from source
+  CWAVTOOL_REPO: PabloMK7/cwavtool
+  CWAVTOOL_COMMIT: d7813492f46253103d9245c0fd9f81a22446d38d    # tag 1.0.0, built from source
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python packages
+        run: python -m pip install -r app/requirements.txt -r tests/requirements-dev.txt
+
+      - name: pycgfx (for the tests only)
+        run: python scripts/get_pycgfx.py
+
+      - name: Tests
+        run: python tests/run_all.py
+
+      - name: Build YANBF-CBC.exe
+        working-directory: app
+        run: >
+          python -m PyInstaller --noconfirm --clean --onefile --noconsole --name YANBF-CBC
+          --hidden-import gltflib --hidden-import PIL.Image --hidden-import argparse
+          --add-data "../banner.blend;." yanbf_cbc.py
+
+      - name: Package
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
+          PKG="YANBF-CBC-$VERSION-Windows"
+          mkdir -p "dist/$PKG"
+          cp app/dist/YANBF-CBC.exe README.md "dist/$PKG/"
+          tar -cf - --exclude=pycgfx --exclude=__pycache__ processes | tar -xf - -C "dist/$PKG"
+          echo "PKG=$PKG" >> "$GITHUB_ENV"
+
+      - name: Check the packaged exe
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist/$env:PKG/YANBF-CBC.exe" -ArgumentList "--check-tools", "$env:RUNNER_TEMP\report.txt" -Wait -PassThru
+          Get-Content "$env:RUNNER_TEMP\report.txt"
+          if ($p.ExitCode -ne 0) { throw "the packaged exe is missing tools (exit $($p.ExitCode))" }
+
+      - name: Zip (and check pycgfx isn't in it)
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/$env:PKG" -DestinationPath "dist/$env:PKG.zip"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $bad = [IO.Compression.ZipFile]::OpenRead("dist/$env:PKG.zip").Entries | Where-Object { $_.FullName -match 'pycgfx[\\/]|banner-camera\.gltf|cgfx[\\/]' }
+          if ($bad) { $bad.FullName; throw "pycgfx must not be in the zip" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*.zip
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest       # Apple Silicon (arm64)
+            label: AppleSilicon
+            arch: arm64
+          - runner: macos-15-intel     # Intel (x86_64)
+            label: Intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the runner's architecture
+        run: test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Python (python.org build, with Tk)
+        run: |
+          curl -fsSL -o python.pkg "https://www.python.org/ftp/python/$PYTHON_VERSION/python-$PYTHON_VERSION-macos11.pkg"
+          sudo installer -pkg python.pkg -target /
+          PY="/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION%.*}/bin/python3"
+          "$PY" -m venv "$RUNNER_TEMP/venv"
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install Python packages
+        run: |
+          python -c "import sys, tkinter; print(sys.version, 'Tk', tkinter.TkVersion)"
+          python -m pip install -r app/requirements.txt -r tests/requirements-dev.txt
+
+      - name: Native tools (makerom, ctrtool, bannertool, cwavtool)
+        run: |
+          set -euo pipefail
+          T="$RUNNER_TEMP/tools"; mkdir -p "$T"; cd "$T"
+          for tag in "$MAKEROM_TAG" "$CTRTOOL_TAG"; do
+            tool="${tag%%-*}"
+            curl -fsSL -o "$tool.zip" "https://github.com/3DSGuy/Project_CTR/releases/download/$tag/$tag-macos_${{ matrix.arch }}.zip"
+            mkdir "$tool-zip"; unzip -q "$tool.zip" -d "$tool-zip"
+            cp "$(find "$tool-zip" -type f -name "$tool" | head -n 1)" "$tool"
+          done
+          # bannertool and cwavtool: compiled straight from their sources (their
+          # Makefiles need a git submodule that no longer exists at the pinned commit)
+          build() {  # name repo commit major minor micro
+            curl -fsSL "https://codeload.github.com/$2/tar.gz/$3" | tar -xz
+            src="$1-$3/source"
+            objs=()
+            for c in $(find "$src" -name '*.c'); do
+              clang -O2 -w -c "$c" -o "${c%.c}.o"; objs+=("${c%.c}.o")
+            done
+            clang++ -O2 -std=c++11 -w -Wno-unused-function -I"$src" \
+              -DVERSION_MAJOR=$4 -DVERSION_MINOR=$5 -DVERSION_MICRO=$6 \
+              $(find "$src" -name '*.cpp') "${objs[@]}" -o "$1"
+          }
+          build bannertool "$BANNERTOOL_REPO" "$BANNERTOOL_COMMIT" 1 2 2
+          build cwavtool "$CWAVTOOL_REPO" "$CWAVTOOL_COMMIT" 1 0 0
+          for t in makerom ctrtool bannertool cwavtool; do
+            chmod +x "$t"; codesign --force -s - "$t"
+            file "$t"; (./"$t" 2>&1 || true) | head -n 2
+            cp "$t" "$GITHUB_WORKSPACE/processes/Project_CTR/"
+          done
+
+      - name: pycgfx (for the tests only - never goes into the app)
+        run: python scripts/get_pycgfx.py
+
+      - name: Tests
+        run: python tests/run_all.py
+
+      - name: Build YANBF-CBC.app
+        working-directory: app
+        run: >
+          python -m PyInstaller --noconfirm --clean --windowed --name YANBF-CBC
+          --osx-bundle-identifier io.github.daaaaavia.yanbf-cbc
+          --hidden-import gltflib --hidden-import PIL.Image --hidden-import argparse
+          --collect-all tkinterdnd2
+          --add-data "../banner.blend:." yanbf_cbc.py
+
+      - name: Add processes/ (Mac tools, no .exe, no pycgfx) and sign
+        run: |
+          set -euo pipefail
+          APP=app/dist/YANBF-CBC.app
+          R="$APP/Contents/Resources/processes"
+          mkdir -p "$R"
+          rsync -a --exclude 'pycgfx/' --exclude '__pycache__/' --exclude '*.exe' processes/ "$R/"
+          find "$R" -type f | sort
+          codesign --force --deep -s - "$APP"
+          codesign --verify --deep --strict "$APP"
+
+      - name: Check the packaged app
+        run: |
+          set -euo pipefail
+          export HOME="$RUNNER_TEMP/home"; mkdir -p "$HOME"
+          set +e
+          app/dist/YANBF-CBC.app/Contents/MacOS/YANBF-CBC --check-tools | tee report.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          test "$code" -eq 0
+          grep -q "program folder: .*/YANBF-CBC.app/Contents/Resources$" report.txt
+          grep -q "pycgfx: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt
+          grep -q "missing: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt  # asks for pycgfx
+          if grep "missing:" report.txt | grep -v "Application Support/YANBF-CBC/pycgfx"; then
+            echo "only pycgfx should be missing"; exit 1                                  # and nothing else
+          fi
+          for t in makerom ctrtool bannertool cwavtool; do grep -q "runs: $t:" report.txt; done
+
+      - name: Zip (and check pycgfx isn't in it)
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME}"
+          [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
+          ZIP="YANBF-CBC-$VERSION-macOS-${{ matrix.label }}.zip"
+          mkdir -p dist
+          ditto -c -k --keepParent app/dist/YANBF-CBC.app "dist/$ZIP"
+          if unzip -l "dist/$ZIP" | grep -E 'pycgfx/|banner-camera\.gltf|/cgfx/'; then
+            echo "pycgfx must not be in the zip"; exit 1
+          fi
+          unzip -l "dist/$ZIP" | tail -n 1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.label }}
+          path: dist/*.zip
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l dist
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "YANBF-CBC $GITHUB_REF_NAME" \
+            --notes-file .github/release-notes.md

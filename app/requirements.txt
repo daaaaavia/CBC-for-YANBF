@@ -1,3 +1,5 @@
-gltflib
-pillow
-pyinstaller
+gltflib==1.0.13
+pillow==12.3.0
+pyinstaller==6.22.3
+# macOS: drag and drop from Finder (Windows uses its own, built in)
+tkinterdnd2==0.6.3; sys_platform != "win32"

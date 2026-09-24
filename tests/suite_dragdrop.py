@@ -6,7 +6,7 @@ import time
 from _common import WINDOWS, check, finish, isolate, S, skip
 
 if not WINDOWS:
-    skip("drag and drop uses Windows messages (WM_DROPFILES); the macOS version needs its own test")
+    skip("this suite sends real Windows messages (WM_DROPFILES); tkdnd drops are tested in suite_platform")
 from ctypes import wintypes  # noqa: E402
 ctypes.windll.user32.SetProcessDPIAware()
 isolate("dragdrop")
