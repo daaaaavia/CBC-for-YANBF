@@ -9,8 +9,9 @@
 # --- not allowed in the repository (no license to share them) ---
 # pycgfx: rebuilt from upstream + patches/pycgfx.patch by scripts/get_pycgfx.py
 /processes/YANBF/pycgfx/
-# the real HOME Menu screenshot (Nintendo artwork); home_bg.py draws a plain backdrop without it
-/app/home_bg_screenshot.py
+# (app/home_bg_screenshot.py - the real HOME Menu screenshot, Nintendo artwork - IS committed,
+#  for the private repo only. Delete it before making the repo public; home_bg.py then
+#  draws a plain backdrop.)
 
 # --- builds and local environment ---
 /YANBF-CBC.exe

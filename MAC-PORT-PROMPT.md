@@ -32,14 +32,17 @@ starting the next:
   frozen, or the parent of `app/` in source mode.
 - **Native tools:** `processes/Project_CTR/{makerom,ctrtool,bannertool,cwavtool}.exe`
   are Windows builds. macOS needs its own builds of each.
-- **Repository:** the code is in a private GitHub repo. Two things are
-  deliberately **not** in it, because they have no license that allows sharing:
+- **Repository:** the code is in a private GitHub repo. Two files have no
+  license that allows sharing, and they're handled differently:
   - **pycgfx:** `scripts/get_pycgfx.py` rebuilds `processes/YANBF/pycgfx/` from
     upstream at a pinned commit plus `patches/pycgfx.patch`, and checks the
     result by SHA-256. Run it on every fresh checkout, including in CI.
-  - **The real HOME Menu screenshot:** `app/home_bg_screenshot.py` is only on
-    the user's PC. Without it, `app/home_bg.py` draws a plain backdrop, so the
-    Mac build uses the plain one. Never add the screenshot to the repo.
+  - **The real HOME Menu screenshot** (Nintendo artwork) is the exception: the
+    user chose to keep `app/home_bg_screenshot.py` **in** the private repo, so
+    the Mac build shows it too. Keep the plain-backdrop fallback in
+    `app/home_bg.py`, since it's what's used if the file is removed before the
+    repo goes public. Remind the user of this if they ask about making the repo
+    public.
 
 ## Hard rules
 
