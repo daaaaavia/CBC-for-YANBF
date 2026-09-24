@@ -38,12 +38,22 @@ starting the next:
     (a zip, no git needed), applies the built-in fixes (the same as
     `patches/pycgfx.patch`) and checks every file by SHA-256. The app shows
     `app/pycgfx_window.py` at startup when pycgfx isn't the tested version.
-    `scripts/get_pycgfx.py` does the same from the command line; run it in CI.
-    **On macOS**, files can't be written inside a signed `.app` bundle. So:
-    - bundle the set-up pycgfx into `Contents/Resources` at build time;
-    - if the setup window ever has to install it, point `paths.PYCGFX_DIR` at
-      a user-writable folder such as `~/Library/Application Support/YANBF-CBC/pycgfx`,
-      not the bundle.
+    `scripts/get_pycgfx.py` does the same from the command line.
+    **The user's decision for macOS: pycgfx is NOT included in the Mac app, and
+    Mac users download it manually.** So on macOS:
+    - **Don't bundle pycgfx** into the `.app` or the release zip.
+    - **Manual option only:** the setup window shows just the by-hand
+      instructions (the exact-version zip link, where to put the files, and
+      Check again). Hide the "Download and set up automatically" option, and
+      don't download anything on the user's behalf.
+    - **User-writable location:** files can't be added inside a signed `.app`,
+      so point `paths.PYCGFX_DIR` at
+      `~/Library/Application Support/YANBF-CBC/pycgfx` on macOS. Show that
+      path in the window with a button that opens it in Finder.
+    - **Keep the rest:** version checking, the automatic fixes on Check again,
+      "don't show again once it checks out", and accepting the zip or the
+      unzipped folder placed there.
+    - **Windows is unchanged:** it keeps both options.
   - **The real HOME Menu screenshot** (Nintendo artwork) is the exception: the
     user chose to keep `app/home_bg_screenshot.py` **in** the private repo, so
     the Mac build shows it too. Keep the plain-backdrop fallback in
@@ -140,20 +150,27 @@ Create `.github/workflows/build-macos.yml`, triggered manually
    - **Record the versions:** record the exact commit or release used for each
      tool in the workflow, so builds are reproducible.
 2. **Python:** set up Python 3.14 (python.org universal2 build, with Tk 8.6+
-   or 9) and install `requirements.txt`, `tkinterdnd2` and PyInstaller. Then
-   run `python scripts/get_pycgfx.py` to set up the patched pycgfx.
+   or 9) and install `requirements.txt`, `tkinterdnd2` and PyInstaller. For
+   the tests only, run `python scripts/get_pycgfx.py`. The workflow may
+   download pycgfx to test with it, but it must never end up in the app.
 3. **App bundle:** run PyInstaller with `--windowed --target-arch universal2`
    to produce `YANBF-CBC.app`.
-   - **Copy in the data:** copy `processes/` (with the Mac tools in place of the
-     `.exe`s, and the same `YANBF/` data and patched pycgfx) into
-     `Contents/Resources/processes`.
+   - **Copy in the data:** copy `processes/` into
+     `Contents/Resources/processes`, with the Mac tools in place of the
+     `.exe`s and the same `YANBF/` data. **Leave out `processes/YANBF/pycgfx/`**:
+     Mac users download pycgfx themselves. Add a workflow check that fails the
+     build if any pycgfx file is inside the `.app` or the zip.
    - **Hidden imports:** use the same hidden imports as the Windows build
      (`gltflib`, `PIL.Image`, `argparse`), plus whatever tkinterdnd2 needs.
 4. **Ad-hoc signing:** run `codesign --force --deep -s - YANBF-CBC.app` so
    Apple Silicon will run it.
-5. **Smoke test:** on the runner, run the frozen app's tool paths with
-   `--help`, run a headless build of a small test CIA through `pipeline.py`,
-   and check `ctrtool` can read the result.
+5. **Smoke test:** on the runner:
+   - run the frozen app's tool paths with `--help`;
+   - run a headless build of a small test CIA through `pipeline.py` and check
+     `ctrtool` can read the result. Use a flat PNG banner, or a
+     test-only pycgfx outside the `.app`.
+   - check that the frozen app, started with no pycgfx in its Application
+     Support folder, reports pycgfx as missing and not the other tools.
 6. **Publish:** zip it (`ditto -c -k --keepParent`) and upload
    `YANBF-CBC-macOS.zip` as the build artifact. Attach it to the release when
    triggered by a tag.
@@ -173,6 +190,11 @@ verified by running it on GitHub.
   - the first launch (right-click → **Open** → **Open**, or
     `xattr -dr com.apple.quarantine YANBF-CBC.app`);
   - where settings, IDs and output are stored on a Mac;
+  - **downloading pycgfx by hand:**
+    - it isn't included in the Mac app;
+    - use exactly version `1f78850` from the link in the setup window;
+    - put the files in `~/Library/Application Support/YANBF-CBC/pycgfx`;
+    - press **Check again**;
   - how to build locally on a Mac and via GitHub Actions;
   - which features differ, if any.
 - **USER_GUIDE.md:** add short Mac notes where behaviour differs:
