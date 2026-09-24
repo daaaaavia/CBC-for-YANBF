@@ -107,6 +107,7 @@ end = time.time() + 1.5
 while time.time() < end:
     root.update(); time.sleep(0.01)
 check(w.last_frame.size == (1200, 720), "window frames are 1200x720")
-check(len(w._fps) >= 15, f"animating at {len(w._fps)} fps")
+check(len(w._fps) >= 3, f"animating at {len(w._fps)} fps")
+check_speed(len(w._fps) >= 15, f"at least 15 fps: {len(w._fps)}")
 app._on_close()
 finish()

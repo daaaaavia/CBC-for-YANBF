@@ -163,9 +163,10 @@ class HomeMenuPreview:
         spent = (time.perf_counter() - t0) * 1000
         self._fps.append(now)
         self._fps = [t for t in self._fps if now - t < 1.0]
-        # at least 10 ms: on a slow machine a frame can take longer than FRAME_MS, and
-        # back-to-back frames would leave no time for clicks and redraws
-        self.win.after(max(10, int(FRAME_MS - spent)), self._tick)
+        # On a slow machine a frame can take longer than FRAME_MS. Then wait as long as
+        # the frame took, so the window keeps at least half the time for clicks and redraws.
+        delay = max(1, int(FRAME_MS - spent)) if spent < FRAME_MS else int(spent)
+        self.win.after(delay, self._tick)
 
     def _render_frame(self):
         posed = preview.pose(self.mesh, self.angle, self.spin_node, self.billboards)
