@@ -206,11 +206,11 @@ The panel on the right updates as soon as a file is picked:
   repository public. Without it, `app/home_bg.py` draws a plain backdrop in
   the same colours and layout. The whole frame is rendered at the 3DS's
   400×240 and shown at 3× (1200×720) with a pixel grid that imitates the gaps
-  between the screen's pixels. On the **banner model** the grid is at full
-  strength (gaps at 70%, pixel centres brightened slightly so it doesn't look
-  dim). On the **background** it's only a hint: every background pixel keeps
-  its exact colour and the gaps are at 94%, so none of the background is
-  lost (status bar text and icons, the faint app-grid tiles):
+  between the screen's pixels. The grid is only a hint, and it's the same
+  over the whole screen: the background, the banner model and the
+  `name`/`nameModel` logo. Every pixel keeps its exact colour and the gaps are
+  at 94%, so no detail is lost. That covers the status bar text and icons, the
+  faint app-grid tiles, and the model's textures and logo:
   - the node named **`worldModel`** (or `world` if there's no `worldModel`)
     spins steadily about its own vertical axis. The default is 45°/s
     (8 s per turn); the slider changes it (negative = other direction), since

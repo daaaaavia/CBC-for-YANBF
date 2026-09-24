@@ -2,9 +2,9 @@
 
 Shows the model on the 3DS top screen through the HOME Menu banner camera. The
 whole frame (HOME Menu backdrop + model) is rendered at the native 400×240 and
-scaled 3×, with a pixel grid imitating the gaps between the 3DS screen's pixels:
-full strength on the banner model, only a hint on the background so none of its
-detail is lost. The model has:
+scaled 3×, with a faint pixel grid imitating the gaps between the 3DS screen's
+pixels - the same on the background and on the banner model, so every pixel keeps
+its exact colour and no detail is lost. The model has:
   * the 'worldModel' node (else 'world') spinning about its own Y axis, as the
     HOME Menu does; the speed is adjustable because the exact rate isn't known
   * nodes named 'name' / 'nameModel' billboarded (YAxial) to face the screen,
@@ -29,14 +29,11 @@ SCALE = 3  # each 3DS pixel = 2x2 lit centre + 1-pixel gap
 DISPLAY = (SCREEN[0] * SCALE, SCREEN[1] * SCALE)
 DEFAULT_SPEED = 45.0  # degrees per second ("medium"); adjustable in the window
 FRAME_MS = 33  # ~30 fps target
-# Pixel grid on the banner model: dark gaps, with the pixel centres brightened so the
-# model doesn't look dim.
-GRID_GAP = 0.70  # brightness of the gaps between the model's pixels
-GRID_LIFT = 1.15  # model pixel centres are brightened by this
-# On the HOME Menu background the grid is only a hint: its pixels keep their exact
-# colours (no brightening) and the gaps are barely darker, so none of its detail (status
-# bar text and icons, the faint app-grid tiles) is lost.
-BG_GRID_GAP = 0.94
+# The pixel grid is only a hint, the same over the whole screen (background, banner
+# model and name/nameModel logo): pixel centres keep their exact colours and the gaps
+# are barely darker, so no detail is lost - status bar text and icons, the faint
+# app-grid tiles, and the model's textures and logo.
+GRID_GAP = 0.94  # brightness of the gaps between pixels
 
 
 def _grid_mask(gap):
@@ -57,22 +54,12 @@ def _grid_mask(gap):
 
 
 def pixel_grid():
-    """(model grid, background grid). The model's gaps are GRID_GAP / GRID_LIFT because
-    model pixels are brightened by GRID_LIFT first, so they end up at GRID_GAP."""
-    return _grid_mask(GRID_GAP / GRID_LIFT), _grid_mask(BG_GRID_GAP)
+    return _grid_mask(GRID_GAP)
 
 
-_LIFT_LUT = [min(255, int(v * GRID_LIFT)) for v in range(256)] * 3
-
-
-def to_screen(frame, grid, model_mask):
-    """400x240 frame -> DISPLAY image: full grid where the model is (model_mask, 'L',
-    400x240), faint grid on the background."""
-    model_grid, bg_grid = grid
-    big = frame.resize(DISPLAY, Image.NEAREST)
-    where = model_mask.resize(DISPLAY, Image.NEAREST)
-    big = Image.composite(big.point(_LIFT_LUT), big, where)
-    return ImageChops.multiply(big, Image.composite(model_grid, bg_grid, where))
+def to_screen(frame, grid):
+    """400x240 frame -> DISPLAY image with the pixel grid."""
+    return ImageChops.multiply(frame.resize(DISPLAY, Image.NEAREST), grid)
 
 
 class HomeMenuPreview:
@@ -182,9 +169,8 @@ class HomeMenuPreview:
 
     def _render_frame(self):
         posed = preview.pose(self.mesh, self.angle, self.spin_node, self.billboards)
-        native, model_mask = preview.render(posed, size=SCREEN, ss=1, background=self.background,
-                                            want_mask=True)
-        frame = to_screen(native, self.grid, model_mask)
+        native = preview.render(posed, size=SCREEN, ss=1, background=self.background)
+        frame = to_screen(native, self.grid)
         self.last_frame = frame
         self._photo = ImageTk.PhotoImage(frame)
         self.screen.configure(image=self._photo)
