@@ -43,8 +43,8 @@ YANBF-CBC/
 
 ### pycgfx
 
-3D banners need **pycgfx** by skyfloogle. Its license doesn't allow sharing it,
-so it isn't included, and the app helps you get it the first time you start
+3D banners need **pycgfx** by skyfloogle. Its license mention sharing,
+so it isn't included, but the app helps you get it the first time you start
 it. Use exactly version `1f78850` (2 June 2025). The app checks every file and
 won't accept any other version.
 
