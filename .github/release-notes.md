@@ -2,6 +2,14 @@ YANBF-CBC builds YANBF forwarder CIAs with custom banners: a 3D `.glb` or flat P
 banner, an icon, and banner audio. It can also send the finished files to your 3DS
 over FTP.
 
+> **Unofficial.** YANBF-CBC is an independent fan-made front end. It is not
+> affiliated with, endorsed by, or supported by the YANBF project, skyfloogle
+> (pycgfx), Epicpkmn11 or Steveice10 (bannertool), PabloMK7 (cwavtool), 3DSGuy
+> (Project_CTR), the tkinterdnd2/tkdnd authors, or Nintendo. Please don't ask
+> those projects for help with this app. Report problems here instead. Nintendo
+> 3DS and HOME Menu are trademarks of Nintendo. No ROMs are included. Use your
+> own legally dumped games.
+
 ## Downloads
 
 | File | For |

@@ -52,7 +52,9 @@ class PycgfxWindow:
         ttk.Label(f, wraplength=wrap, justify="left", text=(
             "YANBF-CBC uses pycgfx, by skyfloogle, to turn 3D (.glb) banners into the 3DS banner "
             "format. It isn't included with this program because its author hasn't published a "
-            "license that allows sharing it, so it has to come from skyfloogle's own GitHub.")
+            "license that allows sharing it, so it has to come from skyfloogle's own GitHub. YANBF-CBC "
+            "is unofficial and not connected to pycgfx or skyfloogle, so please don't report problems "
+            "with this setup to them.")
         ).pack(anchor="w", pady=(6, 0))
 
         # the version warning, in the theme's warning colours

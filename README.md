@@ -4,6 +4,14 @@ A single-window tool for Windows and macOS that turns an icon, a banner (3D `.gl
 flat `.png`), optional audio and a few text fields into an installable 3DS
 `.cia` forwarder for an NDS ROM (via YANBF's `forwarder.elf` / nds-bootstrap).
 
+> **Unofficial.** YANBF-CBC is an independent fan-made front end. It is not
+> affiliated with, endorsed by, or supported by the YANBF project, skyfloogle
+> (pycgfx), Epicpkmn11 or Steveice10 (bannertool), PabloMK7 (cwavtool), 3DSGuy
+> (Project_CTR), the tkinterdnd2/tkdnd authors, or Nintendo. Please don't ask
+> those projects for help with this app. Report problems here instead. Nintendo
+> 3DS and HOME Menu are trademarks of Nintendo. No ROMs are included. Use your
+> own legally dumped games.
+
 One button runs the whole pipeline:
 
 1. **Icon** – `bannertool makesmdh` → `icon.bin`
@@ -493,9 +501,10 @@ file, restore it or clear it in Bitdefender's Manage Quarantine.
 
 ## Credits
 
-YANBF-CBC is a front end. The work of turning a banner, icon and ROM path into
-a working forwarder is done by these projects. Thanks to their authors. The
-same credits are in the app: press **Credits…** in the bottom bar (links open
+YANBF-CBC is an **unofficial** front end. The work of turning a banner, icon and
+ROM path into a working forwarder is done by these projects. Thanks to their
+authors. None of them made, endorse or support YANBF-CBC, so please report
+problems with this app here, not to them. The same credits are in the app: press **Credits…** in the bottom bar (links open
 in your browser).
 
 ### YANBF: Yet Another nds-Bootstrap Forwarder

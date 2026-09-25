@@ -29,7 +29,7 @@ import pycgfx_window
 import settings
 import theme
 
-APP_TITLE = "YANBF-CBC - Custom Banner CIA Builder"
+APP_TITLE = "YANBF-CBC - Custom Banner CIA Builder (unofficial)"
 
 
 def _load_colors():
@@ -63,6 +63,16 @@ CAPTIONS = {
     pl.MODE_PNG: "PNG, max 256×128 px (the 3DS flat banner size).",
     "audio": f"PCM .wav, at most {pl.AUDIO_MAX_TEXT} long. Leave empty to use a 1-second silent placeholder.",
 }
+
+# Shown in the Credits window (the README says the same).
+UNOFFICIAL = ("Unofficial: YANBF-CBC isn't affiliated with, endorsed or supported by any of these "
+              "projects or by Nintendo. Please report problems with this app to YANBF-CBC, not to them.")
+
+
+def bold_default():
+    base = tkfont.nametofont("TkDefaultFont").actual()
+    return (base["family"], base["size"], "bold")
+
 
 # Shown in the Credits window (same as the README's Credits section).
 CREDITS = [
@@ -939,6 +949,7 @@ class App:
         f.pack(fill="both", expand=True)
         ttk.Label(f, text="YANBF-CBC is a front end. The real work is done by these projects - "
                           "thanks to their authors.", wraplength=620, justify="left").pack(anchor="w")
+        ttk.Label(f, text=UNOFFICIAL, wraplength=620, justify="left", font=bold_default()).pack(anchor="w", pady=(6, 0))
         base = tkfont.nametofont("TkDefaultFont").actual()
         bold = (base["family"], base["size"], "bold")
         link_font = (base["family"], base["size"], "underline")
