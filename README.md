@@ -216,7 +216,8 @@ credits are in the app under **Credits…**.
   gc-dspadpcm-encode): converts the audio. MIT.
 - **[Project_CTR](https://github.com/3DSGuy/Project_CTR)** by 3DSGuy (forked
   from bkifft/Project_CTR): makerom builds the CIA. ctrtool is included for
-  checking finished CIAs. No license is shown on GitHub.
+  checking finished CIAs. makerom is MIT (the license is in its folder). ctrtool
+  has no license shown.
 - **[tkinterdnd2](https://github.com/Eliav2/tkinterdnd2)** (originally by
   pmgagne) and **[tkdnd](https://github.com/petasis/tkdnd)** by Georgios
   Petasis: drag and drop in the Mac app. MIT and BSD-style.

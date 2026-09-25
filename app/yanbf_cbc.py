@@ -98,7 +98,7 @@ CREDITS = [
     {"name": "Project_CTR", "url": "https://github.com/3DSGuy/Project_CTR",
      "by": "3DSGuy (forked from bkifft/Project_CTR)",
      "what": "makerom builds the .cia; ctrtool is included for checking finished CIAs.",
-     "license": "no license shown on GitHub - see the repository"},
+     "license": "MIT (makerom, in its folder) / none shown (ctrtool)"},
     {"name": "tkinterdnd2 + tkdnd (Mac version only)", "url": "https://github.com/Eliav2/tkinterdnd2",
      "by": "Eliav2 and pmgagne (tkinterdnd2); Georgios Petasis (tkdnd)",
      "what": "Drag and drop from Finder in the macOS app. The Windows version doesn't use them.",
