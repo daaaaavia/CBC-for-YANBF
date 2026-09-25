@@ -1,6 +1,6 @@
-"""The real 3DS HOME Menu top screen at its native 400x240 (a screenshot of Nintendo's
-artwork), used by home_bg.load(). Fine in the private repository; delete this file
-before making the repository public (home_bg then draws a plain backdrop)."""
+"""A 3DS HOME Menu top screen at its native 400x240, used by home_bg.load(). Despite the
+file name it isn't a screenshot: it's a recreation made for this project, not captured
+from a 3DS. Without this file, home_bg draws a plainer backdrop."""
 
 import base64
 import io

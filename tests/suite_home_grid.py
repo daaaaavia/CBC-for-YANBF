@@ -11,7 +11,7 @@ from PIL import Image
 import home_bg, home_preview as hp, preview
 
 
-# the real HOME Menu screenshot is in the private repo; without it it's the drawn backdrop
+# the recreated HOME Menu backdrop (home_bg_screenshot.py); without it, the drawn one
 SCREENSHOT = importlib.util.find_spec("home_bg_screenshot") is not None
 bg = home_bg.load()
 if SCREENSHOT:

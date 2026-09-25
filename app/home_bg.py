@@ -1,9 +1,9 @@
 """Backdrop for the HOME Menu preview window: a 3DS top screen at its native 400x240.
 
-If home_bg_screenshot.py is present (a screenshot of the real HOME Menu - Nintendo's
-artwork, kept in the private repository only), that is used. Otherwise a plain
-backdrop is drawn in the same colours and layout: pale grey, a faint grid of rounded
-tiles and the darker top and bottom strips, with no Nintendo artwork.
+If home_bg_screenshot.py is present (a recreation of the HOME Menu top screen - named
+'screenshot', but made for this project, not captured from a 3DS), that is used.
+Otherwise a plain backdrop is drawn in the same colours and layout: pale grey, a faint
+grid of rounded tiles and the darker top and bottom strips.
 """
 
 from PIL import Image, ImageDraw

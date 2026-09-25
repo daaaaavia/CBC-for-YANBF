@@ -230,11 +230,10 @@ The panel on the right updates as soon as a file is picked:
   billboarding and the 3DS's exact lighting aren't simulated.
 - **HOME Menu preview…** (3D banners): opens an animated window showing the
   model the way the HOME Menu presents it, through the banner camera, on a
-  HOME Menu top screen at the native 400×240. That's a real HOME Menu capture
-  from `app/home_bg_screenshot.py`. It's Nintendo's artwork, so it's only
-  suitable for the private repository: delete that file before making the
-  repository public. Without it, `app/home_bg.py` draws a plain backdrop in
-  the same colours and layout. The whole frame is rendered at the 3DS's
+  HOME Menu top screen at the native 400×240. The backdrop comes from
+  `app/home_bg_screenshot.py`. Despite the name, it's a recreation made for
+  this project, not a capture from a 3DS. Without that file, `app/home_bg.py`
+  draws a plainer backdrop in the same colours and layout. The whole frame is rendered at the 3DS's
   400×240 and shown at 3× (1200×720) with a pixel grid that imitates the gaps
   between the screen's pixels. The grid is only a hint, and it's the same
   over the whole screen: the background, the banner model and the

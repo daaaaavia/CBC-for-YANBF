@@ -54,12 +54,10 @@ starting the next:
       "don't show again once it checks out", and accepting the zip or the
       unzipped folder placed there.
     - **Windows is unchanged:** it keeps both options.
-  - **The real HOME Menu screenshot** (Nintendo artwork) is the exception: the
-    user chose to keep `app/home_bg_screenshot.py` **in** the private repo, so
-    the Mac build shows it too. Keep the plain-backdrop fallback in
-    `app/home_bg.py`, since it's what's used if the file is removed before the
-    repo goes public. Remind the user of this if they ask about making the repo
-    public.
+  - **The HOME Menu backdrop** (`app/home_bg_screenshot.py`) is committed and
+    used on every platform. Despite its name it's a recreation made for this
+    project, not a capture from a 3DS. Keep the plain-backdrop fallback in
+    `app/home_bg.py`.
 
 ## Hard rules
 
