@@ -110,6 +110,9 @@ COMMON
 Swap in your own models, keep the names, and export with *File → Export →
 glTF 2.0*, using the **glTF Binary (.glb)** format.
 
+**Important note:** Before exporting make sure all items in the `COMMON` 
+hierarchy are selected and all transformations are applied.
+
 ### Drag and drop
 
 You can drag files onto the window instead of using Browse. Drop a file on a
