@@ -254,22 +254,6 @@ The panel on the right updates as soon as a file is picked:
   a Play/Stop button. With no audio selected it notes that 1 s of silence
   will be used.
 
-### How validation works
-
-- Checks run live as you type or pick files. An invalid field turns pink
-  and a red message appears under it, e.g. `Icon is 32×32 px - must be
-  exactly 48×48 px`, `Model is 524,289 bytes (512.0 KB) - must be at most 524,288 bytes (512 KB)`,
-  `Icon must be a PNG (this file is JPEG)`, `Not hexadecimal: invalid
-  character(s) 'G'`, `Too long: max 6 hex digits (0xFFFFFF)`.
-- Images are opened with Pillow, so the real format is checked (a JPEG
-  renamed to `.png` is rejected). Results are cached per file
-  (path, modified time, size).
-- Switching the banner mode changes the file filter and caption, and clears
-  a picked file with the wrong extension.
-- **Build CIA** is enabled only when everything required is valid and the
-  tools are present. The status label says what is still needed.
-- The pipeline repeats all checks when a build starts.
-
 ## Output
 
 `{name}` is the ROM file name without `.nds`, or the Title if the ROM path is
@@ -367,112 +351,6 @@ The Mac app works like the Windows one. The differences:
 
 Everything else is the same, including the HOME Menu preview, Send to 3DS
 and the Blender template.
-
-## Running from source
-
-```bat
-cd YANBF-CBC\app
-py -3.14 -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python yanbf_cbc.py
-```
-
-On a Mac (with Python 3.14 from python.org, which includes Tk):
-
-```sh
-cd YANBF-CBC/app
-python3.14 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python yanbf_cbc.py
-```
-
-In source mode, the Mac tools must be in `processes/Project_CTR/` with no
-`.exe` extension. The GitHub Actions workflow shows how to get or build them.
-
-On a fresh clone, the first start opens the **Set up pycgfx** window (see
-[Setting up pycgfx](#setting-up-pycgfx)). You can also run
-`scripts/get_pycgfx.py` beforehand. From source, pycgfx lives in
-`processes/YANBF/pycgfx/` on both systems.
-
-## Tests
-
-From `YANBF-CBC` (with the app's virtual environment set up as above):
-
-```bat
-app\.venv\Scripts\python -m pip install -r tests\requirements-dev.txt
-app\.venv\Scripts\python tests\run_all.py
-```
-
-`run_all.py` runs the 16 suites in `tests/suite_*.py`, each in its own process,
-and prints one line per suite. Useful options:
-
-- `run_all.py nds ftp` runs just those suites;
-- `-v` prints every check;
-- `--keep` keeps the work folder afterwards.
-
-A few things to know:
-
-- **Generated inputs:** `tests/fixtures.py` creates everything the tests use
-  in a temporary folder each run. That covers icons, banners, `.glb` models,
-  WAV files, `.nds` headers and stand-in tools. No test files are stored in
-  the repository, and nothing copyrighted is needed.
-- **Audio limit reference:** `wav/ref.wav` is exactly 141,000 frames at 48 kHz,
-  the same length as the reference clip.
-- **Your own files are safe:** each suite points `settings.json`,
-  `unique_ids.json` and `output/` at its own scratch files, so your real ones
-  are never touched.
-- **Real windows open:** the GUI suites briefly open Tk windows, so run them
-  on a desktop session.
-- **Real tools run:** `suite_pipeline` also builds real CIAs with the tools in
-  `processes/` and checks them with ctrtool.
-- **Windows only:** `suite_dragdrop` sends real Windows drop messages. On
-  other systems it reports *skipped*.
-- **Both systems:** `suite_platform` switches `sys.platform` to test the Mac
-  behaviour on Windows and the Windows behaviour on a Mac. It covers tool
-  names, where a packaged `.app` looks for files, the audio and *open*
-  commands, dark mode, tkdnd drops and the manual-only pycgfx window.
-- **pyftpdlib:** `suite_ftp` needs it (from `requirements-dev.txt`). It's only
-  for the tests, not the app.
-
-In source mode the program folder is `YANBF-CBC/` (the parent of `app/`).
-
-## Building the exe
-
-From `YANBF-CBC\app`:
-
-```bat
-.venv\Scripts\python -m PyInstaller --noconfirm --clean --onefile --noconsole --name YANBF-CBC --hidden-import gltflib --hidden-import PIL.Image --hidden-import argparse --add-data "..\banner.blend;." yanbf_cbc.py
-copy /y dist\YANBF-CBC.exe ..\YANBF-CBC.exe
-```
-
-`build_exe.bat` does the same, but run the command directly if `.bat` files
-are blocked. The exe is about 21 MB. pycgfx is **not** bundled. It's loaded
-from `processes/YANBF/pycgfx/main.py` at run time, so `processes/` must stay
-next to the exe.
-
-### Building the Mac app, and releases (GitHub Actions)
-
-`.github/workflows/build.yml` builds and tests all three versions on GitHub:
-Windows, macOS Apple Silicon and macOS Intel. Every tool version it uses is
-pinned at the top of the file.
-
-- **Run by hand:** go to **Actions → Build → Run workflow**. The zips are
-  saved as the run's artifacts.
-- **Release:** push a tag, e.g. `git tag v1.0.0` then
-  `git push origin v1.0.0`. The workflow then publishes a GitHub release with
-  the three zips and `.github/release-notes.md`.
-
-On macOS it installs Python from python.org and downloads the macOS builds of
-makerom and ctrtool from the Project_CTR releases. It compiles bannertool and
-cwavtool from source. It then runs the tests, builds `YANBF-CBC.app` with
-PyInstaller (`--windowed`), copies `processes/` into
-`Contents/Resources/processes` (Mac tools, without pycgfx), ad-hoc signs the app
-and checks it with `YANBF-CBC --check-tools`. Every job fails if a pycgfx file
-ends up in a zip. pycgfx is downloaded only to run the tests.
-
-`YANBF-CBC --check-tools [report.txt]` prints the folders the app uses, what's
-missing and the first line from each tool, then exits without opening a
-window. A Windows exe has no console, so give it a file name.
 
 ## Credits
 
