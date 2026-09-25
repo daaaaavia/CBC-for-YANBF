@@ -1,51 +1,36 @@
-YANBF-CBC builds YANBF forwarder CIAs with custom banners: a 3D `.glb` or flat PNG
-banner, an icon, and banner audio. It can also send the finished files to your 3DS
-over FTP.
+Make 3DS forwarders for your DS games, with your own icon, banner (3D or flat) and
+sound. You can also send the finished files to your 3DS over Wi-Fi.
 
-> **Unofficial.** YANBF-CBC is an independent fan-made front end. It is not
-> affiliated with, endorsed by, or supported by the YANBF project, skyfloogle
-> (pycgfx), Epicpkmn11 or Steveice10 (bannertool), PabloMK7 (cwavtool), 3DSGuy
-> (Project_CTR), the tkinterdnd2/tkdnd authors, or Nintendo. Please don't ask
-> those projects for help with this app. Report problems here instead. Nintendo
-> 3DS and HOME Menu are trademarks of Nintendo. No ROMs or Nintendo software are
-> included. Use your own legally dumped games.
+> **Unofficial.** Not affiliated with or supported by YANBF, pycgfx, bannertool,
+> cwavtool, Project_CTR, tkinterdnd2/tkdnd or Nintendo. Please report problems
+> here, not to them. No ROMs or Nintendo software are included.
 
-## Downloads
+## Which file?
 
-| File | For |
-|---|---|
-| `…-Windows.zip` | Windows 10 / 11 (64-bit) |
-| `…-macOS-AppleSilicon.zip` | Macs with an M-series chip (M1 and later) |
-| `…-macOS-Intel.zip` | Intel Macs |
+- **Windows:** `…-Windows.zip`
+- **Mac with an M-series chip (M1 or later):** `…-macOS-AppleSilicon.zip`
+- **Intel Mac:** `…-macOS-Intel.zip`
 
 ## Windows
 
-1. Unzip the whole folder somewhere you can write to, such as Documents. Keep
-   `YANBF-CBC.exe` next to the `processes` folder.
-2. Run `YANBF-CBC.exe`. If SmartScreen warns about it, choose **More info → Run anyway**.
-3. The first time, a **Set up pycgfx** window opens. Press **Download and set up
-   automatically**, or follow the steps to do it by hand.
+1. Unzip it somewhere like Documents, and keep `YANBF-CBC.exe` next to the
+   `processes` folder.
+2. Run `YANBF-CBC.exe`. If SmartScreen warns you, choose **More info → Run anyway**.
+3. The first time, press **Download and set up automatically** to get pycgfx.
 
 ## macOS
 
 1. Unzip it and move `YANBF-CBC.app` to Applications.
-2. **First launch:** the app isn't notarized by Apple, so macOS blocks it the first
-   time. Open it once, then go to **System Settings → Privacy & Security** and press
-   **Open Anyway**. On older macOS versions, right-click the app and choose **Open**
-   instead. Or run this in Terminal:
-   `xattr -dr com.apple.quarantine /Applications/YANBF-CBC.app`
-3. **pycgfx isn't included in the Mac app, so download it yourself.** The
-   **Set up pycgfx** window links the exact version needed, `1f78850`. Put its files
-   (or the zip) in `~/Library/Application Support/YANBF-CBC/pycgfx`. The
-   **Show in Finder** button opens that folder. Then press **Check again**.
+2. The app isn't notarized by Apple, so macOS blocks it the first time. Open it
+   once, then go to **System Settings → Privacy & Security** and press **Open
+   Anyway**.
+3. Download pycgfx by hand. The setup window has the link and shows where the
+   files go.
 
-On a Mac, settings and the Unique ID list are kept in
-`~/Library/Application Support/YANBF-CBC`. Built CIAs go to
-`~/Documents/YANBF-CBC/output`.
-
-On Intel Macs, drag and drop isn't available. Use the Browse buttons instead.
+Your CIAs are saved in `~/Documents/YANBF-CBC/output`. Drag and drop doesn't
+work on Intel Macs, so use Browse there.
 
 ## Why pycgfx isn't included
 
-pycgfx by skyfloogle has no license that allows sharing it, so it always comes from
-its own GitHub. Build CIA stays disabled until it's set up.
+pycgfx's license doesn't allow sharing it, so it has to come from its author's
+GitHub. The app checks that you've got the right version.
