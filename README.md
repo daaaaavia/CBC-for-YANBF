@@ -9,8 +9,8 @@ flat `.png`), optional audio and a few text fields into an installable 3DS
 > (pycgfx), Epicpkmn11 or Steveice10 (bannertool), PabloMK7 (cwavtool), 3DSGuy
 > (Project_CTR), the tkinterdnd2/tkdnd authors, or Nintendo. Please don't ask
 > those projects for help with this app. Report problems here instead. Nintendo
-> 3DS and HOME Menu are trademarks of Nintendo. No ROMs are included. Use your
-> own legally dumped games.
+> 3DS and HOME Menu are trademarks of Nintendo. No ROMs or Nintendo software are
+> included. Use your own legally dumped games.
 
 One button runs the whole pipeline:
 
