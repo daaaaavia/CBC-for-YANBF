@@ -331,21 +331,6 @@ but a large ROM can take several minutes. If connecting times out, check the
 IP address, check that ftpd is still running, and check that Windows Firewall
 or your antivirus allows the connection.
 
-## Appearance (Light / Dark / System)
-
-The **Theme** box at the bottom right of the button bar sets the look:
-
-- **System** (the default): follows Windows' app mode (*Settings →
-  Personalization → Colors → Choose your mode*). If you change the Windows
-  setting while the program is open, it switches within a couple of seconds.
-- **Light**: the original look.
-- **Dark**: a Windows-style dark mode: dark window, fields, log, previews and
-  title bar.
-
-The change applies immediately, with no restart. The choice is saved in
-`settings.json` and used every time the program starts. All colours live in
-`app/theme.py`.
-
 ## macOS
 
 The Mac app works like the Windows one. The differences:
@@ -488,15 +473,6 @@ ends up in a zip. pycgfx is downloaded only to run the tests.
 `YANBF-CBC --check-tools [report.txt]` prints the folders the app uses, what's
 missing and the first line from each tool, then exits without opening a
 window. A Windows exe has no console, so give it a file name.
-
-## Bitdefender note
-
-Bitdefender flags PyInstaller one-file executables. In the first round it
-quarantined the exe and the `.py` sources next to it, and then kept blocking
-writes to those exact paths. Before building, add an exception for the whole
-project folder (with subfolders) under **both** Antivirus scan and Advanced
-Threat Defense. If a write fails with "Permission denied" on one specific
-file, restore it or clear it in Bitdefender's Manage Quarantine.
 
 ## Credits
 
