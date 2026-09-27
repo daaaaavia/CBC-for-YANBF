@@ -1,8 +1,8 @@
-THIRD-PARTY SOFTWARE IN YANBF-CBC
+THIRD-PARTY SOFTWARE IN CBC for YANBF
 
-YANBF-CBC is unofficial and isn't affiliated with or endorsed by any of the
+CBC for YANBF is unofficial and isn't affiliated with or endorsed by any of the
 projects below. Their licenses and copyright notices follow, as their terms
-require. YANBF-CBC's own license is in LICENSE.
+require. CBC for YANBF's own license is in LICENSE.
 
 Contents
   Tools in processes/
@@ -4321,13 +4321,13 @@ Not included: ctrtool
 ==============================================================================
 ctrtool from Project_CTR (https://github.com/3DSGuy/Project_CTR) reads finished
 CIAs. No license has been published for ctrtool itself, so it isn't included in
-YANBF-CBC. The app downloads it from Project_CTR's own v1.3.0 release (Windows),
+CBC for YANBF. The app downloads it from Project_CTR's own v1.3.0 release (Windows),
 or users download it from there themselves (Mac).
 
 ==============================================================================
 Not included: pycgfx
 ==============================================================================
 pycgfx by skyfloogle (https://github.com/skyfloogle/pycgfx) converts 3D banners.
-No license has been published for it, so it isn't included in YANBF-CBC. Users
+No license has been published for it, so it isn't included in CBC for YANBF. Users
 download it from skyfloogle's GitHub themselves. patches/pycgfx.patch contains
 this project's two changes to it.

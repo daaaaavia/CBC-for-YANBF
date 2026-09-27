@@ -1,4 +1,4 @@
-"""YANBF-CBC - YANBF Custom Banner CIA builder (tkinter GUI, entry point)."""
+"""CBC for YANBF - Custom Banner CIA builder for YANBF (tkinter GUI, entry point)."""
 
 import os
 import queue
@@ -31,7 +31,7 @@ import pycgfx_window
 import settings
 import theme
 
-APP_TITLE = "YANBF-CBC - Custom Banner CIA Builder (unofficial)"
+APP_TITLE = "CBC for YANBF - Custom Banner CIA builder (unofficial)"
 
 
 def _load_colors():
@@ -67,8 +67,8 @@ CAPTIONS = {
 }
 
 # Shown in the Credits window (the README says the same).
-UNOFFICIAL = ("Unofficial: YANBF-CBC isn't affiliated with, endorsed or supported by any of these "
-              "projects or by Nintendo. Please report problems with this app to YANBF-CBC, not to them.")
+UNOFFICIAL = ("Unofficial: CBC for YANBF isn't affiliated with, endorsed or supported by any of these "
+              "projects or by Nintendo. Please report problems with this app to CBC for YANBF, not to them.")
 
 
 def bold_default():
@@ -955,7 +955,7 @@ class App:
         win.geometry(f"+{self.root.winfo_rootx() + 140}+{self.root.winfo_rooty() + 90}")
         f = ttk.Frame(win, padding=16)
         f.pack(fill="both", expand=True)
-        ttk.Label(f, text="YANBF-CBC is a front end. The real work is done by these projects - "
+        ttk.Label(f, text="CBC for YANBF is a front end. The real work is done by these projects - "
                           "thanks to their authors.", wraplength=620, justify="left").pack(anchor="w")
         ttk.Label(f, text=UNOFFICIAL, wraplength=620, justify="left", font=bold_default()).pack(anchor="w", pady=(6, 0))
         base = tkfont.nametofont("TkDefaultFont").actual()
@@ -1275,7 +1275,7 @@ class App:
     def show_missing_error(self, items=None):
         short = "\n".join(paths.rel(p) for p in (items or self.missing))
         messagebox.showerror(
-            "YANBF-CBC - missing files",
+            "CBC for YANBF - missing files",
             "These required files are missing:\n\n" + short,
             detail=f"Paths are relative to the program's folder:\n{paths.BASE_DIR}\n\n"
                    "Full paths are listed in the log. Building is disabled until they are in place.",
@@ -1500,7 +1500,7 @@ class App:
 
 
 def check_tools_report():
-    """`YANBF-CBC --check-tools [report.txt]`: where the program looks for everything,
+    """`CBC-for-YANBF --check-tools [report.txt]`: where the program looks for everything,
     what's missing, and the first line each native tool prints - no window. Used by
     the release builds to check a packaged app (a windowed exe has no console, so it
     can write to a file instead). Exit code 1 if anything other than pycgfx or ctrtool

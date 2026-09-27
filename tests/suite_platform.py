@@ -62,8 +62,8 @@ subprocess.run = real_run
 
 print("frozen .app paths")
 home = os.path.join(S, "platform_home")
-app = os.path.join(S, "platform_mac", "YANBF-CBC.app")
-exe = os.path.join(app, "Contents", "MacOS", "YANBF-CBC")
+app = os.path.join(S, "platform_mac", "CBC-for-YANBF.app")
+exe = os.path.join(app, "Contents", "MacOS", "CBC-for-YANBF")
 res = os.path.join(app, "Contents", "Resources")
 os.makedirs(os.path.dirname(exe), exist_ok=True)
 with on("darwin"):
@@ -72,17 +72,32 @@ with on("darwin"):
     os.makedirs(os.path.join(res, "processes"), exist_ok=True)
     check(paths._base_dir(True, exe, "x") == res, "processes/ in Contents/Resources -> used")
     data, out, pyc, ctr = paths._user_dirs(True, res, home)
-    support = os.path.join(home, "Library", "Application Support", "YANBF-CBC")
+    support = os.path.join(home, "Library", "Application Support", "CBC-for-YANBF")
     check(data == support, f"settings + IDs in Application Support: {data}")
-    check(out == os.path.join(home, "Documents", "YANBF-CBC", "output"), f"output in Documents: {out}")
+    check(out == os.path.join(home, "Documents", "CBC-for-YANBF", "output"), f"output in Documents: {out}")
     check(pyc == os.path.join(support, "pycgfx"), f"pycgfx in Application Support: {pyc}")
     check(ctr == os.path.join(support, "ctrtool"), f"ctrtool in Application Support: {ctr}")
     check(not any(p.startswith(app) for p in (data, out, pyc, ctr)), "nothing written inside the bundle")
+    # folders from before the rename (YANBF-CBC) move to the new name, once
+    old_home = os.path.join(S, "platform_old_home")
+    old_support = os.path.join(old_home, "Library", "Application Support", "YANBF-CBC")
+    os.makedirs(os.path.join(old_support, "pycgfx"))
+    with open(os.path.join(old_support, "unique_ids.json"), "w") as f:
+        f.write("{}")
+    os.makedirs(os.path.join(old_home, "Documents", "YANBF-CBC", "output", "Game"))
+    data2, out2, pyc2, _ = paths._user_dirs(True, res, old_home, migrate=True)
+    check(os.path.isfile(os.path.join(data2, "unique_ids.json")) and os.path.isdir(pyc2)
+          and os.path.isdir(os.path.join(out2, "Game")) and not os.path.exists(old_support),
+          "old YANBF-CBC folders moved to CBC-for-YANBF (IDs, pycgfx, output)")
+    os.makedirs(old_support)
+    paths._user_dirs(True, res, old_home, migrate=True)
+    check(os.path.isdir(old_support) and os.path.isfile(os.path.join(data2, "unique_ids.json")),
+          "never overwrites a CBC-for-YANBF folder that already exists")
     src = paths._user_dirs(False, S, home)
     check(src[0] == S, "macOS from source: next to the project, as on Windows")
 with on("win32"):
     base = os.path.join(S, "win")
-    check(paths._base_dir(True, os.path.join(base, "YANBF-CBC.exe"), "x") == base, "Windows exe: its folder")
+    check(paths._base_dir(True, os.path.join(base, "CBC-for-YANBF.exe"), "x") == base, "Windows exe: its folder")
     check(paths._user_dirs(True, base, home) ==
           (base, os.path.join(base, "output"), os.path.join(base, "processes", "YANBF", "pycgfx"),
            os.path.join(base, "processes", "Project_CTR")),

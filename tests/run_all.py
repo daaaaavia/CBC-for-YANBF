@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(HERE), "app"))
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Run the YANBF-CBC test suites.")
+    ap = argparse.ArgumentParser(description="Run the CBC for YANBF test suites.")
     ap.add_argument("suites", nargs="*", help="suite names (e.g. nds for suite_nds.py); default: all")
     ap.add_argument("--keep", action="store_true", help="keep the work folder with the generated inputs")
     ap.add_argument("--timeout", type=float, default=300, help="seconds before a suite counts as hung (default 300)")

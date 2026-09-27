@@ -1,4 +1,4 @@
-# Builds YANBF-CBC for Windows and macOS (Apple Silicon and Intel), runs the tests
+# Builds CBC for YANBF for Windows and macOS (Apple Silicon and Intel), runs the tests
 # on each, and - when a tag like v1.0.0 is pushed - publishes a GitHub release with
 # the three zips.
 #
@@ -56,10 +56,10 @@ jobs:
         timeout-minutes: 30
         run: python tests/run_all.py
 
-      - name: Build YANBF-CBC.exe
+      - name: Build CBC-for-YANBF.exe
         working-directory: app
         run: >
-          python -m PyInstaller --noconfirm --clean --onefile --noconsole --name YANBF-CBC
+          python -m PyInstaller --noconfirm --clean --onefile --noconsole --name CBC-for-YANBF
           --hidden-import gltflib --hidden-import PIL.Image --hidden-import argparse
           --add-data "../banner.blend;." yanbf_cbc.py
 
@@ -67,16 +67,16 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
-          PKG="YANBF-CBC-$VERSION-Windows"
+          PKG="CBC-for-YANBF-$VERSION-Windows"
           mkdir -p "dist/$PKG"
-          cp app/dist/YANBF-CBC.exe README.md LICENSE THIRD_PARTY_LICENSES.txt "dist/$PKG/"
+          cp app/dist/CBC-for-YANBF.exe README.md LICENSE THIRD_PARTY_LICENSES.txt "dist/$PKG/"
           tar -cf - --exclude=pycgfx --exclude=ctrtool.exe --exclude=__pycache__ processes | tar -xf - -C "dist/$PKG"
           echo "PKG=$PKG" >> "$GITHUB_ENV"
 
       - name: Check the packaged exe
         shell: pwsh
         run: |
-          $p = Start-Process -FilePath "dist/$env:PKG/YANBF-CBC.exe" -ArgumentList "--check-tools", "$env:RUNNER_TEMP\report.txt" -Wait -PassThru
+          $p = Start-Process -FilePath "dist/$env:PKG/CBC-for-YANBF.exe" -ArgumentList "--check-tools", "$env:RUNNER_TEMP\report.txt" -Wait -PassThru
           Get-Content "$env:RUNNER_TEMP\report.txt"
           if ($p.ExitCode -ne 0) { throw "the packaged exe is missing tools (exit $($p.ExitCode))" }
 
@@ -167,11 +167,11 @@ jobs:
         timeout-minutes: 30
         run: python tests/run_all.py
 
-      - name: Build YANBF-CBC.app
+      - name: Build CBC-for-YANBF.app
         working-directory: app
         run: >
-          python -m PyInstaller --noconfirm --clean --windowed --name YANBF-CBC
-          --osx-bundle-identifier io.github.daaaaavia.yanbf-cbc
+          python -m PyInstaller --noconfirm --clean --windowed --name CBC-for-YANBF
+          --osx-bundle-identifier io.github.daaaaavia.cbc-for-yanbf
           --hidden-import gltflib --hidden-import PIL.Image --hidden-import argparse
           --collect-all tkinterdnd2
           --add-data "../banner.blend:." yanbf_cbc.py
@@ -179,7 +179,7 @@ jobs:
       - name: Add processes/ (Mac tools, no .exe, no pycgfx or ctrtool) and sign
         run: |
           set -euo pipefail
-          APP=app/dist/YANBF-CBC.app
+          APP=app/dist/CBC-for-YANBF.app
           R="$APP/Contents/Resources/processes"
           mkdir -p "$R"
           rsync -a --exclude 'pycgfx/' --exclude 'ctrtool' --exclude '__pycache__/' --exclude '*.exe' processes/ "$R/"
@@ -193,15 +193,15 @@ jobs:
           set -euo pipefail
           export HOME="$RUNNER_TEMP/home"; mkdir -p "$HOME"
           set +e
-          app/dist/YANBF-CBC.app/Contents/MacOS/YANBF-CBC --check-tools | tee report.txt
+          app/dist/CBC-for-YANBF.app/Contents/MacOS/CBC-for-YANBF --check-tools | tee report.txt
           code=${PIPESTATUS[0]}
           set -e
           test "$code" -eq 0
-          grep -q "program folder: .*/YANBF-CBC.app/Contents/Resources$" report.txt
-          grep -q "pycgfx: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt
-          grep -q "missing: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt  # asks for pycgfx
-          grep -q "missing: $HOME/Library/Application Support/YANBF-CBC/ctrtool/ctrtool" report.txt  # and ctrtool
-          if grep "missing:" report.txt | grep -v "Application Support/YANBF-CBC/pycgfx\|Application Support/YANBF-CBC/ctrtool"; then
+          grep -q "program folder: .*/CBC-for-YANBF.app/Contents/Resources$" report.txt
+          grep -q "pycgfx: $HOME/Library/Application Support/CBC-for-YANBF/pycgfx" report.txt
+          grep -q "missing: $HOME/Library/Application Support/CBC-for-YANBF/pycgfx" report.txt  # asks for pycgfx
+          grep -q "missing: $HOME/Library/Application Support/CBC-for-YANBF/ctrtool/ctrtool" report.txt  # and ctrtool
+          if grep "missing:" report.txt | grep -v "Application Support/CBC-for-YANBF/pycgfx\|Application Support/CBC-for-YANBF/ctrtool"; then
             echo "only pycgfx and ctrtool should be missing"; exit 1                                  # and nothing else
           fi
           for t in makerom bannertool cwavtool; do grep -q "runs: $t:" report.txt; done
@@ -211,13 +211,13 @@ jobs:
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME}"
           [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
-          ZIP="YANBF-CBC-$VERSION-macOS-${{ matrix.label }}.zip"
+          ZIP="CBC-for-YANBF-$VERSION-macOS-${{ matrix.label }}.zip"
           mkdir -p dist
           # the app, with the licenses and README beside it
-          mkdir -p pkg/YANBF-CBC
-          cp -R app/dist/YANBF-CBC.app pkg/YANBF-CBC/
-          cp README.md LICENSE THIRD_PARTY_LICENSES.txt pkg/YANBF-CBC/
-          ditto -c -k --keepParent pkg/YANBF-CBC "dist/$ZIP"
+          mkdir -p pkg/CBC-for-YANBF
+          cp -R app/dist/CBC-for-YANBF.app pkg/CBC-for-YANBF/
+          cp README.md LICENSE THIRD_PARTY_LICENSES.txt pkg/CBC-for-YANBF/
+          ditto -c -k --keepParent pkg/CBC-for-YANBF "dist/$ZIP"
           if unzip -l "dist/$ZIP" | grep -E 'pycgfx/|banner-camera\.gltf|/cgfx/|ctrtool'; then
             echo "pycgfx and ctrtool must not be in the zip"; exit 1
           fi
@@ -245,5 +245,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l dist
-          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "YANBF-CBC $GITHUB_REF_NAME" \
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "CBC for YANBF $GITHUB_REF_NAME" \
             --notes-file .github/release-notes.md

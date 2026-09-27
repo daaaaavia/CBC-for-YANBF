@@ -17,6 +17,7 @@
 
 # --- builds and local environment ---
 /YANBF-CBC.exe
+/CBC-for-YANBF.exe
 /app/.venv/
 /app/build/
 /app/dist/

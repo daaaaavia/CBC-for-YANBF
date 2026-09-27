@@ -1,7 +1,7 @@
 """'Set up pycgfx' window: shown at startup when the pycgfx folder isn't the tested
 version (see pycgfx_setup). The window itself is setup_window.SetupWindow; this adds
 pycgfx's wording and checks. On macOS only the manual option is shown, and the files
-go in ~/Library/Application Support/YANBF-CBC/pycgfx."""
+go in ~/Library/Application Support/CBC-for-YANBF/pycgfx."""
 
 import paths
 import pycgfx_setup as ps
@@ -11,13 +11,13 @@ from setup_window import SetupWindow
 class PycgfxWindow(SetupWindow):
     title = "Set up pycgfx"
     heading = "One more file is needed: pycgfx"
-    intro = ("YANBF-CBC uses pycgfx, by skyfloogle, to turn 3D (.glb) banners into the 3DS banner "
+    intro = ("CBC for YANBF uses pycgfx, by skyfloogle, to turn 3D (.glb) banners into the 3DS banner "
              "format. It isn't included with this program because its author hasn't published a "
-             "license that allows sharing it, so it has to come from skyfloogle's own GitHub. YANBF-CBC "
+             "license that allows sharing it, so it has to come from skyfloogle's own GitHub. CBC for YANBF "
              "is unofficial and not connected to pycgfx or skyfloogle, so please don't report problems "
              "with this setup to them.")
     warn_title = f"Use exactly this version: pycgfx {ps.SHORT} ({ps.DATE})"
-    warn_text = ("This build of YANBF-CBC was made and tested with that version. Newer or older "
+    warn_text = ("This build of CBC for YANBF was made and tested with that version. Newer or older "
                  "versions of pycgfx are not accepted - the program checks every file. It then "
                  "adds its own two fixes (logo billboarding and a crash fix) automatically, so "
                  "don't edit the files yourself.")

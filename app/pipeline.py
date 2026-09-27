@@ -1,4 +1,4 @@
-"""Build pipeline for YANBF-CBC: validation helpers, BuildJob, pycgfx loader, Pipeline.
+"""Build pipeline for CBC for YANBF: validation helpers, BuildJob, pycgfx loader, Pipeline.
 
 Order: icon -> pycgfx (.glb only) -> audio -> banner -> CIA.
 """
@@ -369,7 +369,7 @@ class Pipeline:
             self.log("err", f"Could not start {args[0]}: {ex}")
             if pu.is_mac():
                 self.log("err", "If macOS blocked it, open Terminal and run: xattr -dr com.apple.quarantine "
-                                "followed by the path of YANBF-CBC.app, then try again.")
+                                "followed by the path of CBC-for-YANBF.app, then try again.")
             raise StepFailed(step)
         for line in (r.stdout or "").splitlines():
             self.log("out", line)

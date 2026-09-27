@@ -1,7 +1,7 @@
 """'Set up ctrtool' window: shown at startup when ctrtool isn't the pinned Project_CTR
 release (see ctrtool_setup). The window itself is setup_window.SetupWindow; this adds
 ctrtool's wording and checks. On macOS only the manual option is shown, and ctrtool
-goes in ~/Library/Application Support/YANBF-CBC/ctrtool."""
+goes in ~/Library/Application Support/CBC-for-YANBF/ctrtool."""
 
 import ctrtool_setup as cs
 import paths
@@ -12,12 +12,12 @@ from setup_window import SetupWindow
 class CtrtoolWindow(SetupWindow):
     title = "Set up ctrtool"
     heading = "One more file is needed: ctrtool"
-    intro = ("YANBF-CBC uses ctrtool, from 3DSGuy's Project_CTR, to read and check finished CIAs. "
+    intro = ("CBC for YANBF uses ctrtool, from 3DSGuy's Project_CTR, to read and check finished CIAs. "
              "No license has been published for it, so it isn't included with this program and has "
-             "to come from Project_CTR's own release page. YANBF-CBC is unofficial and not connected "
+             "to come from Project_CTR's own release page. CBC for YANBF is unofficial and not connected "
              "to Project_CTR, so please don't report problems with this setup to them.")
     warn_title = f"Use exactly this version: ctrtool {cs.VERSION} ({cs.DATE})"
-    warn_text = ("This build of YANBF-CBC was made and tested with that release. Other versions "
+    warn_text = ("This build of CBC for YANBF was made and tested with that release. Other versions "
                  "aren't accepted - the program checks the file.")
     link_label = f"Download ctrtool {cs.VERSION} for this computer:"
     link_caption = ""

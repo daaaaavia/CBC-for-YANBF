@@ -1,11 +1,13 @@
-# YANBF-CBC — YANBF Custom Banner CIA builder
+# CBC for YANBF
 
-YANBF-CBC makes 3DS forwarders for your DS games, with your own icon, banner and
+**Custom Banner CIA builder for YANBF**
+
+CBC for YANBF makes 3DS forwarders for your DS games, with your own icon, banner and
 sound. Pick a `.nds`, an icon, a 3D (`.glb`) or flat (`.png`) banner and an
 optional `.wav`, press **Build CIA**, and you get a `.cia` that launches the game
 through YANBF and nds-bootstrap. It runs on Windows and macOS.
 
-> **Unofficial.** YANBF-CBC is an independent fan-made tool. It isn't affiliated
+> **Unofficial.** CBC for YANBF is an independent fan-made tool. It isn't affiliated
 > with, endorsed by or supported by YANBF, skyfloogle (pycgfx), Epicpkmn11 or
 > Steveice10 (bannertool), PabloMK7 (cwavtool), 3DSGuy (Project_CTR), the
 > tkinterdnd2/tkdnd authors, or Nintendo. Please report problems here, not to
@@ -29,12 +31,12 @@ One button runs every step:
 ## Getting started
 
 Unzip the Windows download somewhere you can write to, such as Documents, and
-run `YANBF-CBC.exe`. Keep the `processes` folder next to it, because that's
+run `CBC-for-YANBF.exe`. Keep the `processes` folder next to it, because that's
 where the tools live:
 
 ```
-YANBF-CBC/
-├── YANBF-CBC.exe
+CBC-for-YANBF/
+├── CBC-for-YANBF.exe
 ├── processes/        the tools (keep this next to the exe)
 ├── output/           your CIAs (made on the first build)
 ├── unique_ids.json   IDs used so far
@@ -187,28 +189,28 @@ is still running, and check that your firewall allows the connection.
 
 The Mac app works like the Windows one, with a few differences:
 
-- **Installing:** unzip the Apple Silicon or Intel zip and move `YANBF-CBC.app`
+- **Installing:** unzip the Apple Silicon or Intel zip and move `CBC-for-YANBF.app`
   to Applications.
 - **First launch:** the app isn't notarized by Apple, so macOS blocks it the
   first time. Open it once, then go to **System Settings → Privacy &
   Security** and press **Open Anyway**. On older macOS versions, right-click
   the app and choose **Open**. You can also run
-  `xattr -dr com.apple.quarantine /Applications/YANBF-CBC.app` in Terminal.
+  `xattr -dr com.apple.quarantine /Applications/CBC-for-YANBF.app` in Terminal.
 - **pycgfx and ctrtool have to be downloaded by hand.** Follow the steps
   in each setup window. The files go in
-  `~/Library/Application Support/YANBF-CBC/pycgfx` and `…/ctrtool`, and **Show
+  `~/Library/Application Support/CBC-for-YANBF/pycgfx` and `…/ctrtool`, and **Show
   in Finder** opens the right folder. For ctrtool, get `macos_arm64` for
   Apple Silicon or `macos_x86_64` for Intel. The app makes it runnable for you
   once it checks out.
 - **Where things are kept:** settings and IDs are in
-  `~/Library/Application Support/YANBF-CBC/`, and CIAs are in
-  `~/Documents/YANBF-CBC/output/`.
+  `~/Library/Application Support/CBC-for-YANBF/`, and CIAs are in
+  `~/Documents/CBC-for-YANBF/output/`.
 - **Drag and drop** doesn't work on Intel Macs, so use Browse there. It works
   on Apple Silicon.
 
 ## Credits
 
-YANBF-CBC is just a front end. The real work is done by these projects, and
+CBC for YANBF is just a front end. The real work is done by these projects, and
 thanks go to their authors. None of them made or support this app. The same
 credits are in the app under **Credits…**.
 
@@ -239,5 +241,5 @@ credits are in the app under **Credits…**.
 
 ## License
 
-YANBF-CBC is MIT licensed (see `LICENSE`). The tools and libraries it includes
+CBC for YANBF is MIT licensed (see `LICENSE`). The tools and libraries it includes
 keep their own licenses, collected in `THIRD_PARTY_LICENSES.txt`.

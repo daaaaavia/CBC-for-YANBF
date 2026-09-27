@@ -1,11 +1,11 @@
-"""'Set up …' windows for the files YANBF-CBC can't include (no license allows it):
+"""'Set up …' windows for the files CBC for YANBF can't include (no license allows it):
 pycgfx (PycgfxWindow in pycgfx_window.py) and ctrtool (CtrtoolWindow in
 ctrtool_window.py). Shown at startup while a file isn't the tested version. Offers an
 automatic download or step-by-step manual placement, and stays away once the files
 check out.
 
 On macOS only the manual option is shown: the Mac app doesn't download anything for
-the user. The files go in ~/Library/Application Support/YANBF-CBC/ there.
+the user. The files go in ~/Library/Application Support/CBC-for-YANBF/ there.
 
 A subclass supplies the wording (the class attributes below) and the checks (state,
 prepare_manual, fetch, install).

@@ -1,6 +1,6 @@
 """Setting up ctrtool (Project_CTR's CIA reader) in paths.CTRTOOL_DIR.
 
-No license has been published for ctrtool, so YANBF-CBC doesn't include it. This
+No license has been published for ctrtool, so CBC for YANBF doesn't include it. This
 module checks what's installed and can set it up from Project_CTR's own release:
   * automatically (Windows): download the release zip, check it and unzip it
   * by hand: the user downloads the zip and puts it (or the unzipped ctrtool) in the
@@ -137,7 +137,7 @@ def tidy_manual_placement(dest=None):
 
 def download(progress=None, cancel=None):
     """This computer's release zip from GitHub, as bytes. progress(bytes_so_far, total or None)."""
-    req = urllib.request.Request(zip_url(), headers={"User-Agent": "YANBF-CBC"})
+    req = urllib.request.Request(zip_url(), headers={"User-Agent": "CBC-for-YANBF"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         total = int(r.headers.get("Content-Length") or 0) or None
         buf = bytearray()

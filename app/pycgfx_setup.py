@@ -1,6 +1,6 @@
 """Setting up pycgfx (skyfloogle's .glb -> CGFX converter) in processes/YANBF/pycgfx/.
 
-pycgfx has no license that allows sharing it, so the GitHub version of YANBF-CBC
+pycgfx has no license that allows sharing it, so the GitHub version of CBC for YANBF
 doesn't include it. This module checks what's installed and can set it up:
 
   * download(): the exact tested version (commit 1f78850, 2 June 2025) as a zip
@@ -216,7 +216,7 @@ def tidy_manual_placement(dest=None):
 
 def download(progress=None, cancel=None):
     """The tested version's zip from GitHub, as bytes. progress(bytes_so_far, total or None)."""
-    req = urllib.request.Request(DOWNLOAD_URL, headers={"User-Agent": "YANBF-CBC"})
+    req = urllib.request.Request(DOWNLOAD_URL, headers={"User-Agent": "CBC-for-YANBF"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         total = int(r.headers.get("Content-Length") or 0) or None
         buf = bytearray()

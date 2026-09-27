@@ -22,6 +22,6 @@ SOFTWARE.
 
 ---
 
-This license covers YANBF-CBC's own code and files. The third-party tools and
+This license covers CBC for YANBF's own code and files. The third-party tools and
 files in processes/, and the libraries built into the app, keep their own
 licenses: see THIRD_PARTY_LICENSES.txt.

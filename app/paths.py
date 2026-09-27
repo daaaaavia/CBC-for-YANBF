@@ -1,15 +1,16 @@
-"""Path resolution for YANBF-CBC.
+"""Path resolution for CBC for YANBF.
 
 Every path the app uses is derived from BASE_DIR:
   * frozen Windows exe: the folder containing the .exe
-  * frozen macOS app: YANBF-CBC.app/Contents/Resources (where processes/ is copied),
+  * frozen macOS app: CBC-for-YANBF.app/Contents/Resources (where processes/ is copied),
     or the folder containing the .app if processes/ sits next to it
-  * source mode: the parent of app/, i.e. YANBF-CBC/
+  * source mode: the parent of app/ (the project folder)
 
 On Windows and in source mode, settings, the Unique ID registry and output/ live in
 BASE_DIR too. A Mac app can't write inside its own bundle, so there they go to
-~/Library/Application Support/YANBF-CBC/ (settings, IDs, pycgfx, ctrtool) and
-~/Documents/YANBF-CBC/output.
+~/Library/Application Support/CBC-for-YANBF/ (settings, IDs, pycgfx, ctrtool) and
+~/Documents/CBC-for-YANBF/output. Folders from before the rename (YANBF-CBC) are
+moved there the first time.
 
 Never use __file__ (frozen), sys.argv[0] or os.getcwd() for this.
 """
@@ -33,11 +34,29 @@ def _base_dir(frozen, executable, source_file):
     return exe_dir
 
 
-def _user_dirs(frozen, base_dir, home):
+NAME = "CBC-for-YANBF"  # folder name for the Mac app's own data
+OLD_NAME = "YANBF-CBC"  # the name before the rename
+
+
+def _move_old(parent):
+    """The app used to be called YANBF-CBC: move its folder to the new name, once."""
+    old, new = os.path.join(parent, OLD_NAME), os.path.join(parent, NAME)
+    if os.path.isdir(old) and not os.path.exists(new):
+        try:
+            os.rename(old, new)
+        except OSError:
+            pass
+
+
+def _user_dirs(frozen, base_dir, home, migrate=False):
     """(folder for settings.json + unique_ids.json, output folder, pycgfx folder, ctrtool folder)."""
     if pu.is_mac() and frozen:
-        support = os.path.join(home, "Library", "Application Support", "YANBF-CBC")
-        return (support, os.path.join(home, "Documents", "YANBF-CBC", "output"),
+        library, documents = os.path.join(home, "Library", "Application Support"), os.path.join(home, "Documents")
+        if migrate:
+            _move_old(library)
+            _move_old(documents)
+        support = os.path.join(library, NAME)
+        return (support, os.path.join(documents, NAME, "output"),
                 os.path.join(support, "pycgfx"), os.path.join(support, "ctrtool"))
     return (base_dir, os.path.join(base_dir, "output"), os.path.join(base_dir, "processes", "YANBF", "pycgfx"),
             os.path.join(base_dir, "processes", "Project_CTR"))
@@ -45,7 +64,7 @@ def _user_dirs(frozen, base_dir, home):
 
 FROZEN = bool(getattr(sys, "frozen", False))
 BASE_DIR = _base_dir(FROZEN, sys.executable, __file__)
-DATA_DIR, OUTPUT_DIR, PYCGFX_DIR, CTRTOOL_DIR = _user_dirs(FROZEN, BASE_DIR, os.path.expanduser("~"))
+DATA_DIR, OUTPUT_DIR, PYCGFX_DIR, CTRTOOL_DIR = _user_dirs(FROZEN, BASE_DIR, os.path.expanduser("~"), migrate=True)
 
 PROCESSES_DIR = os.path.join(BASE_DIR, "processes")
 PROJECT_CTR_DIR = os.path.join(PROCESSES_DIR, "Project_CTR")

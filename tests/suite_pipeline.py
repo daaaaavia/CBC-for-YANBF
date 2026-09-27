@@ -190,7 +190,7 @@ print("5. real tools")
 real_out = os.path.join(S, "real_out")
 for mode, banner in (("glb", "test.glb"), ("png", "banner256.png")):
     job = pl.BuildJob(icon_path="icon48.png", banner_mode=mode, banner_path=banner, audio_path="",
-                      rom_path=f"/roms/nds/Real {mode}.nds", title="Real Test", publisher="YANBF-CBC",
+                      rom_path=f"/roms/nds/Real {mode}.nds", title="Real Test", publisher="CBC for YANBF",
                       product_code="CTR-H-TEST", unique_id="FF3F0", minor=0)
     ok, lines, p = run_job(job, out_root=real_out)
     if not ok:
