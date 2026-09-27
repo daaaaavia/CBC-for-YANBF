@@ -71,20 +71,22 @@ with on("darwin"):
           "no processes/ in the bundle -> the folder holding the .app")
     os.makedirs(os.path.join(res, "processes"), exist_ok=True)
     check(paths._base_dir(True, exe, "x") == res, "processes/ in Contents/Resources -> used")
-    data, out, pyc = paths._user_dirs(True, res, home)
+    data, out, pyc, ctr = paths._user_dirs(True, res, home)
     support = os.path.join(home, "Library", "Application Support", "YANBF-CBC")
     check(data == support, f"settings + IDs in Application Support: {data}")
     check(out == os.path.join(home, "Documents", "YANBF-CBC", "output"), f"output in Documents: {out}")
     check(pyc == os.path.join(support, "pycgfx"), f"pycgfx in Application Support: {pyc}")
-    check(not any(p.startswith(app) for p in (data, out, pyc)), "nothing written inside the bundle")
+    check(ctr == os.path.join(support, "ctrtool"), f"ctrtool in Application Support: {ctr}")
+    check(not any(p.startswith(app) for p in (data, out, pyc, ctr)), "nothing written inside the bundle")
     src = paths._user_dirs(False, S, home)
     check(src[0] == S, "macOS from source: next to the project, as on Windows")
 with on("win32"):
     base = os.path.join(S, "win")
     check(paths._base_dir(True, os.path.join(base, "YANBF-CBC.exe"), "x") == base, "Windows exe: its folder")
     check(paths._user_dirs(True, base, home) ==
-          (base, os.path.join(base, "output"), os.path.join(base, "processes", "YANBF", "pycgfx")),
-          "Windows: settings, output and pycgfx next to the exe, as before")
+          (base, os.path.join(base, "output"), os.path.join(base, "processes", "YANBF", "pycgfx"),
+           os.path.join(base, "processes", "Project_CTR")),
+          "Windows: settings, output, pycgfx and ctrtool next to the exe, as before")
 
 print("audio player")
 if REAL == "win32":

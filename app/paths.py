@@ -8,7 +8,7 @@ Every path the app uses is derived from BASE_DIR:
 
 On Windows and in source mode, settings, the Unique ID registry and output/ live in
 BASE_DIR too. A Mac app can't write inside its own bundle, so there they go to
-~/Library/Application Support/YANBF-CBC/ (settings, IDs, pycgfx) and
+~/Library/Application Support/YANBF-CBC/ (settings, IDs, pycgfx, ctrtool) and
 ~/Documents/YANBF-CBC/output.
 
 Never use __file__ (frozen), sys.argv[0] or os.getcwd() for this.
@@ -34,23 +34,25 @@ def _base_dir(frozen, executable, source_file):
 
 
 def _user_dirs(frozen, base_dir, home):
-    """(folder for settings.json + unique_ids.json, output folder, pycgfx folder)."""
+    """(folder for settings.json + unique_ids.json, output folder, pycgfx folder, ctrtool folder)."""
     if pu.is_mac() and frozen:
         support = os.path.join(home, "Library", "Application Support", "YANBF-CBC")
-        return support, os.path.join(home, "Documents", "YANBF-CBC", "output"), os.path.join(support, "pycgfx")
-    return base_dir, os.path.join(base_dir, "output"), os.path.join(base_dir, "processes", "YANBF", "pycgfx")
+        return (support, os.path.join(home, "Documents", "YANBF-CBC", "output"),
+                os.path.join(support, "pycgfx"), os.path.join(support, "ctrtool"))
+    return (base_dir, os.path.join(base_dir, "output"), os.path.join(base_dir, "processes", "YANBF", "pycgfx"),
+            os.path.join(base_dir, "processes", "Project_CTR"))
 
 
 FROZEN = bool(getattr(sys, "frozen", False))
 BASE_DIR = _base_dir(FROZEN, sys.executable, __file__)
-DATA_DIR, OUTPUT_DIR, PYCGFX_DIR = _user_dirs(FROZEN, BASE_DIR, os.path.expanduser("~"))
+DATA_DIR, OUTPUT_DIR, PYCGFX_DIR, CTRTOOL_DIR = _user_dirs(FROZEN, BASE_DIR, os.path.expanduser("~"))
 
 PROCESSES_DIR = os.path.join(BASE_DIR, "processes")
 PROJECT_CTR_DIR = os.path.join(PROCESSES_DIR, "Project_CTR")
 YANBF_DIR = os.path.join(PROCESSES_DIR, "YANBF")
 GENERATOR_DATA_DIR = os.path.join(YANBF_DIR, "generator", "data")
 
-CTRTOOL = os.path.join(PROJECT_CTR_DIR, pu.exe_name("ctrtool"))
+CTRTOOL = os.path.join(CTRTOOL_DIR, pu.exe_name("ctrtool"))  # downloaded, see ctrtool_setup
 MAKEROM = os.path.join(PROJECT_CTR_DIR, pu.exe_name("makerom"))
 BANNERTOOL = os.path.join(PROJECT_CTR_DIR, pu.exe_name("bannertool"))
 CWAVTOOL = os.path.join(PROJECT_CTR_DIR, pu.exe_name("cwavtool"))

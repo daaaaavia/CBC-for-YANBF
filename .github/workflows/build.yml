@@ -5,9 +5,10 @@
 #   Run by hand:  Actions > Build > Run workflow   (zips are kept as build artifacts)
 #   Release:      git tag v1.0.0 && git push origin v1.0.0
 #
-# pycgfx isn't included in any zip (no license to share it). It's downloaded here only
-# to run the tests; the Windows app downloads it on first start (or the user places it),
-# and Mac users download it by hand. Each job fails if a pycgfx file ends up in a zip.
+# pycgfx and ctrtool aren't included in any zip (no license to share them). They're
+# downloaded here only to run the tests; the Windows app downloads them on first start
+# (or the user places them), and Mac users download them by hand. Each job fails if
+# either ends up in a zip.
 
 name: Build
 
@@ -24,7 +25,6 @@ env:
   # Native tools for macOS - exact versions, so builds are reproducible. The Windows
   # .exe builds of the same versions are in processes/Project_CTR/.
   MAKEROM_TAG: makerom-v0.19.0     # 3DSGuy/Project_CTR release (prebuilt macOS binaries)
-  CTRTOOL_TAG: ctrtool-v1.3.0      # 3DSGuy/Project_CTR release (prebuilt macOS binaries)
   BANNERTOOL_REPO: Epicpkmn11/bannertool
   BANNERTOOL_COMMIT: e21f280f0336b6e9dfa5a8a76684c9cea2bd0d3b  # tag v1.2.2, built from source
   CWAVTOOL_REPO: PabloMK7/cwavtool
@@ -49,6 +49,9 @@ jobs:
       - name: pycgfx (for the tests only)
         run: python scripts/get_pycgfx.py
 
+      - name: ctrtool (for the tests only - never goes into a zip)
+        run: python scripts/get_ctrtool.py
+
       - name: Tests
         timeout-minutes: 30
         run: python tests/run_all.py
@@ -67,7 +70,7 @@ jobs:
           PKG="YANBF-CBC-$VERSION-Windows"
           mkdir -p "dist/$PKG"
           cp app/dist/YANBF-CBC.exe README.md LICENSE THIRD_PARTY_LICENSES.txt "dist/$PKG/"
-          tar -cf - --exclude=pycgfx --exclude=__pycache__ processes | tar -xf - -C "dist/$PKG"
+          tar -cf - --exclude=pycgfx --exclude=ctrtool.exe --exclude=__pycache__ processes | tar -xf - -C "dist/$PKG"
           echo "PKG=$PKG" >> "$GITHUB_ENV"
 
       - name: Check the packaged exe
@@ -77,13 +80,13 @@ jobs:
           Get-Content "$env:RUNNER_TEMP\report.txt"
           if ($p.ExitCode -ne 0) { throw "the packaged exe is missing tools (exit $($p.ExitCode))" }
 
-      - name: Zip (and check pycgfx isn't in it)
+      - name: Zip (and check pycgfx and ctrtool aren't in it)
         shell: pwsh
         run: |
           Compress-Archive -Path "dist/$env:PKG" -DestinationPath "dist/$env:PKG.zip"
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $bad = [IO.Compression.ZipFile]::OpenRead("dist/$env:PKG.zip").Entries | Where-Object { $_.FullName -match 'pycgfx[\\/]|banner-camera\.gltf|cgfx[\\/]' }
-          if ($bad) { $bad.FullName; throw "pycgfx must not be in the zip" }
+          $bad = [IO.Compression.ZipFile]::OpenRead("dist/$env:PKG.zip").Entries | Where-Object { $_.FullName -match 'pycgfx[\\/]|banner-camera\.gltf|cgfx[\\/]|ctrtool' }
+          if ($bad) { $bad.FullName; throw "pycgfx and ctrtool must not be in the zip" }
 
       - uses: actions/upload-artifact@v4
         with:
@@ -123,11 +126,11 @@ jobs:
           python -c "import sys, tkinter; print(sys.version, 'Tk', tkinter.TkVersion)"
           python -m pip install -r app/requirements.txt -r tests/requirements-dev.txt
 
-      - name: Native tools (makerom, ctrtool, bannertool, cwavtool)
+      - name: Native tools (makerom, bannertool, cwavtool)
         run: |
           set -euo pipefail
           T="$RUNNER_TEMP/tools"; mkdir -p "$T"; cd "$T"
-          for tag in "$MAKEROM_TAG" "$CTRTOOL_TAG"; do
+          for tag in "$MAKEROM_TAG"; do
             tool="${tag%%-*}"
             curl -fsSL -o "$tool.zip" "https://github.com/3DSGuy/Project_CTR/releases/download/$tag/$tag-macos_${{ matrix.arch }}.zip"
             mkdir "$tool-zip"; unzip -q "$tool.zip" -d "$tool-zip"
@@ -148,7 +151,7 @@ jobs:
           }
           build bannertool "$BANNERTOOL_REPO" "$BANNERTOOL_COMMIT" 1 2 2
           build cwavtool "$CWAVTOOL_REPO" "$CWAVTOOL_COMMIT" 1 0 0
-          for t in makerom ctrtool bannertool cwavtool; do
+          for t in makerom bannertool cwavtool; do
             chmod +x "$t"; codesign --force -s - "$t"
             file "$t"; (./"$t" 2>&1 || true) | head -n 2
             cp "$t" "$GITHUB_WORKSPACE/processes/Project_CTR/"
@@ -156,6 +159,9 @@ jobs:
 
       - name: pycgfx (for the tests only - never goes into the app)
         run: python scripts/get_pycgfx.py
+
+      - name: ctrtool (for the tests only - never goes into a zip)
+        run: python scripts/get_ctrtool.py
 
       - name: Tests
         timeout-minutes: 30
@@ -170,13 +176,13 @@ jobs:
           --collect-all tkinterdnd2
           --add-data "../banner.blend:." yanbf_cbc.py
 
-      - name: Add processes/ (Mac tools, no .exe, no pycgfx) and sign
+      - name: Add processes/ (Mac tools, no .exe, no pycgfx or ctrtool) and sign
         run: |
           set -euo pipefail
           APP=app/dist/YANBF-CBC.app
           R="$APP/Contents/Resources/processes"
           mkdir -p "$R"
-          rsync -a --exclude 'pycgfx/' --exclude '__pycache__/' --exclude '*.exe' processes/ "$R/"
+          rsync -a --exclude 'pycgfx/' --exclude 'ctrtool' --exclude '__pycache__/' --exclude '*.exe' processes/ "$R/"
           cp LICENSE THIRD_PARTY_LICENSES.txt "$APP/Contents/Resources/"
           find "$R" -type f | sort
           codesign --force --deep -s - "$APP"
@@ -194,12 +200,13 @@ jobs:
           grep -q "program folder: .*/YANBF-CBC.app/Contents/Resources$" report.txt
           grep -q "pycgfx: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt
           grep -q "missing: $HOME/Library/Application Support/YANBF-CBC/pycgfx" report.txt  # asks for pycgfx
-          if grep "missing:" report.txt | grep -v "Application Support/YANBF-CBC/pycgfx"; then
-            echo "only pycgfx should be missing"; exit 1                                  # and nothing else
+          grep -q "missing: $HOME/Library/Application Support/YANBF-CBC/ctrtool/ctrtool" report.txt  # and ctrtool
+          if grep "missing:" report.txt | grep -v "Application Support/YANBF-CBC/pycgfx\|Application Support/YANBF-CBC/ctrtool"; then
+            echo "only pycgfx and ctrtool should be missing"; exit 1                                  # and nothing else
           fi
-          for t in makerom ctrtool bannertool cwavtool; do grep -q "runs: $t:" report.txt; done
+          for t in makerom bannertool cwavtool; do grep -q "runs: $t:" report.txt; done
 
-      - name: Zip (and check pycgfx isn't in it)
+      - name: Zip (and check pycgfx and ctrtool aren't in it)
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME}"
@@ -211,8 +218,8 @@ jobs:
           cp -R app/dist/YANBF-CBC.app pkg/YANBF-CBC/
           cp README.md LICENSE THIRD_PARTY_LICENSES.txt pkg/YANBF-CBC/
           ditto -c -k --keepParent pkg/YANBF-CBC "dist/$ZIP"
-          if unzip -l "dist/$ZIP" | grep -E 'pycgfx/|banner-camera\.gltf|/cgfx/'; then
-            echo "pycgfx must not be in the zip"; exit 1
+          if unzip -l "dist/$ZIP" | grep -E 'pycgfx/|banner-camera\.gltf|/cgfx/|ctrtool'; then
+            echo "pycgfx and ctrtool must not be in the zip"; exit 1
           fi
           unzip -l "dist/$ZIP" | tail -n 1
 

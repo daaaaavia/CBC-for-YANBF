@@ -61,6 +61,19 @@ doesn't come back. The two fixes make the `name`/`nameModel` logo face the
 screen and stop some banners crashing on the 3DS. They're in
 `patches/pycgfx.patch`.
 
+### ctrtool
+
+The app also uses **ctrtool**, from 3DSGuy's Project_CTR, to read finished
+CIAs. No license has been published for it, so it isn't included either. Once
+pycgfx is sorted, a second window sets it up the same way. Use exactly
+ctrtool `1.3.0`: the app checks the file and won't accept any other version.
+
+- **Automatic (Windows):** press **Download and set up automatically**. It
+  fetches ctrtool from Project_CTR's own release page (under 1 MB).
+- **By hand:** download the zip from the link in the window, put it (or
+  the `ctrtool` file inside it) in the folder shown, then press **Check
+  again**.
+
 ## Fields
 
 | Field | Required | Notes |
@@ -181,10 +194,12 @@ The Mac app works like the Windows one, with a few differences:
   Security** and press **Open Anyway**. On older macOS versions, right-click
   the app and choose **Open**. You can also run
   `xattr -dr com.apple.quarantine /Applications/YANBF-CBC.app` in Terminal.
-- **pycgfx has to be downloaded by hand.** Follow the steps in the setup
-  window and put the files in
-  `~/Library/Application Support/YANBF-CBC/pycgfx`. **Show in Finder** opens
-  that folder.
+- **pycgfx and ctrtool have to be downloaded by hand.** Follow the steps
+  in each setup window. The files go in
+  `~/Library/Application Support/YANBF-CBC/pycgfx` and `…/ctrtool`, and **Show
+  in Finder** opens the right folder. For ctrtool, get `macos_arm64` for
+  Apple Silicon or `macos_x86_64` for Intel. The app makes it runnable for you
+  once it checks out.
 - **Where things are kept:** settings and IDs are in
   `~/Library/Application Support/YANBF-CBC/`, and CIAs are in
   `~/Documents/YANBF-CBC/output/`.
@@ -215,9 +230,9 @@ credits are in the app under **Credits…**.
   Steveice10's bannertool, using David Bryant's adpcm-xq and Jack Andersen's
   gc-dspadpcm-encode): converts the audio. MIT.
 - **[Project_CTR](https://github.com/3DSGuy/Project_CTR)** by 3DSGuy (forked
-  from bkifft/Project_CTR): makerom builds the CIA. ctrtool is included for
-  checking finished CIAs. makerom is MIT (the license is in its folder). ctrtool
-  has no license shown.
+  from bkifft/Project_CTR): makerom builds the CIA and is MIT (the license is
+  in its folder). ctrtool reads finished CIAs. It has no license shown, so the
+  app downloads it from Project_CTR's releases instead of including it.
 - **[tkinterdnd2](https://github.com/Eliav2/tkinterdnd2)** (originally by
   pmgagne) and **[tkdnd](https://github.com/petasis/tkdnd)** by Georgios
   Petasis: drag and drop in the Mac app. MIT and BSD-style.

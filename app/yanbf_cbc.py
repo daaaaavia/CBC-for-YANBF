@@ -16,6 +16,8 @@ import argparse  # noqa: F401
 import gltflib  # noqa: F401
 from PIL import Image, ImageDraw, ImageTk
 
+import ctrtool_setup
+import ctrtool_window
 import dragdrop
 import ftp_window
 import home_preview
@@ -97,7 +99,8 @@ CREDITS = [
      "license": "MIT (per its README)"},
     {"name": "Project_CTR", "url": "https://github.com/3DSGuy/Project_CTR",
      "by": "3DSGuy (forked from bkifft/Project_CTR)",
-     "what": "makerom builds the .cia; ctrtool is included for checking finished CIAs.",
+     "what": "makerom builds the .cia; ctrtool reads finished CIAs. ctrtool isn't included - the app "
+             "downloads it from Project_CTR's releases.",
      "license": "MIT (makerom, in its folder) / none shown (ctrtool)"},
     {"name": "tkinterdnd2 + tkdnd (Mac version only)", "url": "https://github.com/Eliav2/tkinterdnd2",
      "by": "Eliav2 and pmgagne (tkinterdnd2); Georgios Petasis (tkdnd)",
@@ -125,6 +128,7 @@ class App:
         self.last_cia = None  # .cia from this session's last successful build
         self.ftp_win = None  # Send to 3DS window
         self.pycgfx_win = None  # Set up pycgfx window
+        self.ctrtool_win = None  # Set up ctrtool window
         self.loaded_nds = None  # normalized path of the .nds the fields were filled from
         self.locks = {}  # key -> {"widget", "var", "button", "state": free|locked|editing}
         # previews
@@ -691,6 +695,8 @@ class App:
             self.home_win.close()
         if self._pycgfx_open():
             self.pycgfx_win.close()
+        if self._ctrtool_open():
+            self.ctrtool_win.close()
         self.root.after_cancel(self._poll_id)
         self.root.after_cancel(self._theme_watch_id)
         self.root.destroy()
@@ -769,6 +775,8 @@ class App:
             self.ftp_win.restyle()
         if self._pycgfx_open():
             self.pycgfx_win.restyle()
+        if self._ctrtool_open():
+            self.ctrtool_win.restyle()
         # previews: redraw with the new panel colours
         for key in ("icon", "audio"):
             self._preview_keys.pop(key, None)
@@ -1180,17 +1188,21 @@ class App:
     # ------------------------------------------------------------------ checks
     @staticmethod
     def find_missing():
-        """Required files that are missing - pycgfx counts as missing unless it's the
-        tested version (pycgfx_setup checks every file)."""
+        """Required files that are missing - pycgfx and ctrtool count as missing unless
+        they're the tested versions (pycgfx_setup / ctrtool_setup check them)."""
         missing = paths.find_missing()
         if not pycgfx_setup.is_ready() and paths.PYCGFX_MAIN not in missing:
             missing.append(paths.PYCGFX_MAIN)
+        if not ctrtool_setup.is_ready() and paths.CTRTOOL not in missing:
+            missing.append(paths.CTRTOOL)
         return missing
 
     def check_tools(self):
         missing = self.find_missing()
         if paths.PYCGFX_MAIN in missing and os.path.isfile(paths.PYCGFX_MAIN):
             self.log("err", f"pycgfx isn't the tested version ({pycgfx_setup.SHORT}) - see the setup window")
+        if paths.CTRTOOL in missing and os.path.isfile(paths.CTRTOOL):
+            self.log("err", f"ctrtool isn't the tested version ({ctrtool_setup.VERSION}) - see the setup window")
         if missing:
             self.log("err", f"Missing required files (program folder: {paths.BASE_DIR}):")
             for p in missing:
@@ -1201,7 +1213,9 @@ class App:
         return missing
 
     def startup_checks(self):
-        """After the window is shown: set up pycgfx if needed, report other missing files."""
+        """After the window is shown: set up pycgfx and ctrtool if needed, report other
+        missing files."""
+        ctrtool_setup.prepare()  # on a Mac: runnable, out of quarantine
         try:
             if pycgfx_setup.fix_stock():  # the original files were placed by hand
                 self.log("ok", f"Added this project's two fixes to pycgfx {pycgfx_setup.SHORT}")
@@ -1211,18 +1225,39 @@ class App:
             self.log("err", f"Couldn't add the fixes to pycgfx: {ex}")
         self.report_missing()
 
-    def report_missing(self):
-        """pycgfx gets its setup window; anything else missing gets the error box."""
+    def _is_pycgfx(self, p):
         pyc_dir = os.path.normcase(paths.PYCGFX_DIR)
-        others = [p for p in self.missing
-                  if os.path.normcase(p) != pyc_dir and not os.path.normcase(p).startswith(pyc_dir + os.sep)]
-        if len(others) < len(self.missing):
+        return os.path.normcase(p) == pyc_dir or os.path.normcase(p).startswith(pyc_dir + os.sep)
+
+    def report_missing(self):
+        """pycgfx and ctrtool get their setup windows (pycgfx first, then ctrtool);
+        anything else missing gets the error box."""
+        pycgfx = [p for p in self.missing if self._is_pycgfx(p)]
+        ctrtool = [p for p in self.missing if os.path.normcase(p) == os.path.normcase(paths.CTRTOOL)]
+        others = [p for p in self.missing if p not in pycgfx and p not in ctrtool]
+        if pycgfx:
             self.open_pycgfx_setup()
+        elif ctrtool:
+            self.open_ctrtool_setup()
         if others:
             self.show_missing_error(others)
 
     def _pycgfx_open(self):
         return self.pycgfx_win is not None and self.pycgfx_win.win.winfo_exists()
+
+    def _ctrtool_open(self):
+        return self.ctrtool_win is not None and self.ctrtool_win.win.winfo_exists()
+
+    def open_ctrtool_setup(self):
+        if self._ctrtool_open():
+            self.ctrtool_win.win.deiconify()
+            self.ctrtool_win.win.lift()
+            return
+        self.ctrtool_win = ctrtool_window.CtrtoolWindow(self, self._ctrtool_ready)
+
+    def _ctrtool_ready(self):
+        self.missing = self.check_tools()
+        self.validate()
 
     def open_pycgfx_setup(self):
         if self._pycgfx_open():
@@ -1234,6 +1269,8 @@ class App:
     def _pycgfx_ready(self):
         self.missing = self.check_tools()
         self.validate()
+        if paths.CTRTOOL in self.missing and not self._ctrtool_open():
+            self.root.after_idle(self.open_ctrtool_setup)  # the next thing to set up
 
     def show_missing_error(self, items=None):
         short = "\n".join(paths.rel(p) for p in (items or self.missing))
@@ -1466,11 +1503,14 @@ def check_tools_report():
     """`YANBF-CBC --check-tools [report.txt]`: where the program looks for everything,
     what's missing, and the first line each native tool prints - no window. Used by
     the release builds to check a packaged app (a windowed exe has no console, so it
-    can write to a file instead). Exit code 1 if anything other than pycgfx is missing."""
+    can write to a file instead). Exit code 1 if anything other than pycgfx or ctrtool
+    (both downloaded separately) is missing."""
     import subprocess
     lines = [f"program folder: {paths.BASE_DIR}", f"settings + IDs: {paths.DATA_DIR}",
              f"output: {paths.OUTPUT_DIR}", f"pycgfx: {paths.PYCGFX_DIR}"]
     for tool in (paths.CTRTOOL, paths.MAKEROM, paths.BANNERTOOL, paths.CWAVTOOL):
+        if not os.path.isfile(tool):
+            continue
         try:
             r = subprocess.run([tool], capture_output=True, text=True, errors="replace", timeout=20,
                                stdin=subprocess.DEVNULL, **pu.popen_flags())
@@ -1487,7 +1527,7 @@ def check_tools_report():
             f.write(text)
     elif sys.stdout is not None:
         sys.stdout.write(text)
-    others = [p for p in missing if not p.startswith(paths.PYCGFX_DIR)]
+    others = [p for p in missing if not p.startswith(paths.PYCGFX_DIR) and p != paths.CTRTOOL]
     return 1 if others or any(l.startswith("can't run") for l in lines) else 0
 
 

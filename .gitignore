@@ -9,6 +9,9 @@
 # --- not allowed in the repository (no license to share them) ---
 # pycgfx: rebuilt from upstream + patches/pycgfx.patch by scripts/get_pycgfx.py
 /processes/YANBF/pycgfx/
+# ctrtool: no license published; set up by the app or scripts/get_ctrtool.py
+/processes/Project_CTR/ctrtool
+/processes/Project_CTR/ctrtool.exe
 # (app/home_bg_screenshot.py IS committed: despite the name it's a recreation of the
 #  HOME Menu top screen made for this project, not a capture.)
 
