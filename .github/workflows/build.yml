@@ -66,7 +66,7 @@ jobs:
           [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
           PKG="YANBF-CBC-$VERSION-Windows"
           mkdir -p "dist/$PKG"
-          cp app/dist/YANBF-CBC.exe README.md "dist/$PKG/"
+          cp app/dist/YANBF-CBC.exe README.md LICENSE THIRD_PARTY_LICENSES.txt "dist/$PKG/"
           tar -cf - --exclude=pycgfx --exclude=__pycache__ processes | tar -xf - -C "dist/$PKG"
           echo "PKG=$PKG" >> "$GITHUB_ENV"
 
@@ -177,6 +177,7 @@ jobs:
           R="$APP/Contents/Resources/processes"
           mkdir -p "$R"
           rsync -a --exclude 'pycgfx/' --exclude '__pycache__/' --exclude '*.exe' processes/ "$R/"
+          cp LICENSE THIRD_PARTY_LICENSES.txt "$APP/Contents/Resources/"
           find "$R" -type f | sort
           codesign --force --deep -s - "$APP"
           codesign --verify --deep --strict "$APP"
@@ -205,7 +206,11 @@ jobs:
           [[ "$GITHUB_REF_TYPE" == tag ]] || VERSION="build-${GITHUB_SHA::7}"
           ZIP="YANBF-CBC-$VERSION-macOS-${{ matrix.label }}.zip"
           mkdir -p dist
-          ditto -c -k --keepParent app/dist/YANBF-CBC.app "dist/$ZIP"
+          # the app, with the licenses and README beside it
+          mkdir -p pkg/YANBF-CBC
+          cp -R app/dist/YANBF-CBC.app pkg/YANBF-CBC/
+          cp README.md LICENSE THIRD_PARTY_LICENSES.txt pkg/YANBF-CBC/
+          ditto -c -k --keepParent pkg/YANBF-CBC "dist/$ZIP"
           if unzip -l "dist/$ZIP" | grep -E 'pycgfx/|banner-camera\.gltf|/cgfx/'; then
             echo "pycgfx must not be in the zip"; exit 1
           fi

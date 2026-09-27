@@ -221,3 +221,8 @@ credits are in the app under **Credits…**.
 - **[tkinterdnd2](https://github.com/Eliav2/tkinterdnd2)** (originally by
   pmgagne) and **[tkdnd](https://github.com/petasis/tkdnd)** by Georgios
   Petasis: drag and drop in the Mac app. MIT and BSD-style.
+
+## License
+
+YANBF-CBC is MIT licensed (see `LICENSE`). The tools and libraries it includes
+keep their own licenses, collected in `THIRD_PARTY_LICENSES.txt`.
