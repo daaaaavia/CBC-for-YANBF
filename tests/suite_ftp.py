@@ -70,9 +70,9 @@ print("cancel mid-transfer (throttled server)")
 srv, PORT2 = serve(read_limit=400 * 1024)
 ftp = ftp3ds.connect("127.0.0.1", PORT2)
 cancel = threading.Event()
-threading.Timer(0.8, cancel.set).start()
+# cancel as soon as some data has gone (a timer raced the upload on fast machines)
 try:
-    ftp3ds.upload(ftp, big, "/c/big.bin", None, cancel)
+    ftp3ds.upload(ftp, big, "/c/big.bin", lambda sent, total: sent > 0 and cancel.set(), cancel)
     check(False, "cancel raises Cancelled")
 except ftp3ds.Cancelled:
     check(True, "cancel raises Cancelled")
