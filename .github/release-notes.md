@@ -16,8 +16,8 @@ sound. You can also send the finished files to your 3DS over Wi-Fi.
 1. Unzip it somewhere like Documents, and keep `CBC-for-YANBF.exe` next to the
    `processes` folder.
 2. Run `CBC-for-YANBF.exe`. If SmartScreen warns you, choose **More info → Run anyway**.
-3. The first time, press **Download and set up automatically** to get pycgfx,
-   then again in the next window to get ctrtool.
+3. The first time, press **Download and set up automatically** to get pycgfx
+   and ctrtool.
 
 ## macOS
 
@@ -25,7 +25,7 @@ sound. You can also send the finished files to your 3DS over Wi-Fi.
 2. The app isn't notarized by Apple, so macOS blocks it the first time. Open it
    once, then go to **System Settings → Privacy & Security** and press **Open
    Anyway**.
-3. Download pycgfx and ctrtool by hand. Each setup window has the link and
+3. Download pycgfx and ctrtool by hand. The setup window has the links and
    shows where the files go.
 
 Your CIAs are saved in `~/Documents/CBC-for-YANBF/output`. Drag and drop doesn't

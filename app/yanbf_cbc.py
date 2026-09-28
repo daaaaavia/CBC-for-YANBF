@@ -17,7 +17,6 @@ import gltflib  # noqa: F401
 from PIL import Image, ImageDraw, ImageTk
 
 import ctrtool_setup
-import ctrtool_window
 import dragdrop
 import ftp_window
 import home_preview
@@ -27,8 +26,8 @@ import pipeline as pl
 import platform_util as pu
 import preview
 import pycgfx_setup
-import pycgfx_window
 import settings
+import setup_window
 import theme
 
 APP_TITLE = "CBC for YANBF - Custom Banner CIA builder (unofficial)"
@@ -127,8 +126,7 @@ class App:
         self.last_out_dir = None
         self.last_cia = None  # .cia from this session's last successful build
         self.ftp_win = None  # Send to 3DS window
-        self.pycgfx_win = None  # Set up pycgfx window
-        self.ctrtool_win = None  # Set up ctrtool window
+        self.setup_win = None  # Set up downloads window (pycgfx + ctrtool)
         self.loaded_nds = None  # normalized path of the .nds the fields were filled from
         self.locks = {}  # key -> {"widget", "var", "button", "state": free|locked|editing}
         # previews
@@ -693,10 +691,8 @@ class App:
         self._stop_audio()
         if self._home_open():
             self.home_win.close()
-        if self._pycgfx_open():
-            self.pycgfx_win.close()
-        if self._ctrtool_open():
-            self.ctrtool_win.close()
+        if self._setup_open():
+            self.setup_win.close()
         self.root.after_cancel(self._poll_id)
         self.root.after_cancel(self._theme_watch_id)
         self.root.destroy()
@@ -773,10 +769,8 @@ class App:
                 theme.set_title_bar(dlg)
         if self._ftp_open():
             self.ftp_win.restyle()
-        if self._pycgfx_open():
-            self.pycgfx_win.restyle()
-        if self._ctrtool_open():
-            self.ctrtool_win.restyle()
+        if self._setup_open():
+            self.setup_win.restyle()
         # previews: redraw with the new panel colours
         for key in ("icon", "audio"):
             self._preview_keys.pop(key, None)
@@ -1230,47 +1224,29 @@ class App:
         return os.path.normcase(p) == pyc_dir or os.path.normcase(p).startswith(pyc_dir + os.sep)
 
     def report_missing(self):
-        """pycgfx and ctrtool get their setup windows (pycgfx first, then ctrtool);
-        anything else missing gets the error box."""
-        pycgfx = [p for p in self.missing if self._is_pycgfx(p)]
-        ctrtool = [p for p in self.missing if os.path.normcase(p) == os.path.normcase(paths.CTRTOOL)]
-        others = [p for p in self.missing if p not in pycgfx and p not in ctrtool]
-        if pycgfx:
-            self.open_pycgfx_setup()
-        elif ctrtool:
-            self.open_ctrtool_setup()
+        """pycgfx and ctrtool get the Set up downloads window; anything else missing
+        gets the error box."""
+        downloads = [p for p in self.missing
+                     if self._is_pycgfx(p) or os.path.normcase(p) == os.path.normcase(paths.CTRTOOL)]
+        others = [p for p in self.missing if p not in downloads]
+        if downloads:
+            self.open_setup()
         if others:
             self.show_missing_error(others)
 
-    def _pycgfx_open(self):
-        return self.pycgfx_win is not None and self.pycgfx_win.win.winfo_exists()
+    def _setup_open(self):
+        return self.setup_win is not None and self.setup_win.win.winfo_exists()
 
-    def _ctrtool_open(self):
-        return self.ctrtool_win is not None and self.ctrtool_win.win.winfo_exists()
-
-    def open_ctrtool_setup(self):
-        if self._ctrtool_open():
-            self.ctrtool_win.win.deiconify()
-            self.ctrtool_win.win.lift()
+    def open_setup(self):
+        if self._setup_open():
+            self.setup_win.win.deiconify()
+            self.setup_win.win.lift()
             return
-        self.ctrtool_win = ctrtool_window.CtrtoolWindow(self, self._ctrtool_ready)
+        self.setup_win = setup_window.SetupWindow(self, self._setup_ready)
 
-    def _ctrtool_ready(self):
+    def _setup_ready(self):
         self.missing = self.check_tools()
         self.validate()
-
-    def open_pycgfx_setup(self):
-        if self._pycgfx_open():
-            self.pycgfx_win.win.deiconify()
-            self.pycgfx_win.win.lift()
-            return
-        self.pycgfx_win = pycgfx_window.PycgfxWindow(self, self._pycgfx_ready)
-
-    def _pycgfx_ready(self):
-        self.missing = self.check_tools()
-        self.validate()
-        if paths.CTRTOOL in self.missing and not self._ctrtool_open():
-            self.root.after_idle(self.open_ctrtool_setup)  # the next thing to set up
 
     def show_missing_error(self, items=None):
         short = "\n".join(paths.rel(p) for p in (items or self.missing))

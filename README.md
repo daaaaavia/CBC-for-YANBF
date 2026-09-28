@@ -43,38 +43,29 @@ CBC-for-YANBF/
 └── settings.json     your options
 ```
 
-### pycgfx
+### pycgfx and ctrtool
 
-3D banners need **pycgfx** by skyfloogle. It doesn't have any license mention,
-so it isn't included, but the app helps you get it the first time you start
-it. Use exactly version `1f78850` (2 June 2025). The app checks every file and
-won't accept any other version.
-
-- **Automatic (Windows):** press **Download and set up automatically**. It
-  fetches that version from skyfloogle's GitHub (about 3 MB) and adds this
-  project's two small fixes.
-- **By hand:** download the zip from the link in the window. Don't use the
-  green Code button, because that gives the newest version. Put `main.py`,
-  `banner-camera.gltf` and the `cgfx` folder (or just the zip) in the folder
-  shown, then press **Check again**.
-
-**Build CIA** stays disabled until pycgfx is set up. After that, the window
-doesn't come back. The two fixes make the `name`/`nameModel` logo face the
-screen and stop some banners crashing on the 3DS. They're in
-`patches/pycgfx.patch`.
-
-### ctrtool
-
-The app also uses **ctrtool**, from 3DSGuy's Project_CTR, to read finished
-CIAs. No license has been published for it, so it isn't included either. Once
-pycgfx is sorted, a second window sets it up the same way. Use exactly
-ctrtool `1.3.0`: the app checks the file and won't accept any other version.
+Two files come from other projects and aren't included: **pycgfx** by
+skyfloogle, which turns 3D banners into the 3DS format, and **ctrtool** from
+3DSGuy's Project_CTR, which reads finished CIAs. pycgfx doesn't have any license
+mention and ctrtool has no license published, so neither can be shared. The
+first time you start the app, a **Set up downloads** window helps you get both.
+Use exactly pycgfx `1f78850` (2 June 2025) and ctrtool `1.3.0`. The app checks
+every file and won't accept any other version.
 
 - **Automatic (Windows):** press **Download and set up automatically**. It
-  fetches ctrtool from Project_CTR's own release page (under 1 MB).
-- **By hand:** download the zip from the link in the window, put it (or
-  the `ctrtool` file inside it) in the folder shown, then press **Check
-  again**.
+  fetches whichever are missing from their authors' GitHub pages (about 4 MB)
+  and adds this project's two small fixes to pycgfx.
+- **By hand:** each file has its own link and folder in the window. For
+  pycgfx, don't use the green Code button, because that gives the newest
+  version. Put `main.py`, `banner-camera.gltf` and the `cgfx` folder (or just
+  the zip) in its folder. For ctrtool, put the zip, or the `ctrtool` file
+  inside it, in its folder. Then press **Check again**.
+
+The window can't be closed until both files are set up, and **Build CIA**
+stays disabled until then. After that, the window doesn't come back. The two
+pycgfx fixes make the `name`/`nameModel` logo face the screen and stop some
+banners crashing on the 3DS. They're in `patches/pycgfx.patch`.
 
 ## Fields
 
@@ -197,7 +188,7 @@ The Mac app works like the Windows one, with a few differences:
   the app and choose **Open**. You can also run
   `xattr -dr com.apple.quarantine /Applications/CBC-for-YANBF.app` in Terminal.
 - **pycgfx and ctrtool have to be downloaded by hand.** Follow the steps
-  in each setup window. The files go in
+  in the setup window. The files go in
   `~/Library/Application Support/CBC-for-YANBF/pycgfx` and `…/ctrtool`, and **Show
   in Finder** opens the right folder. For ctrtool, get `macos_arm64` for
   Apple Silicon or `macos_x86_64` for Intel. The app makes it runnable for you

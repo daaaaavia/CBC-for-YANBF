@@ -31,6 +31,7 @@ def main():
     ap.add_argument("--timeout", type=float, default=300, help="seconds before a suite counts as hung (default 300)")
     ap.add_argument("-v", "--verbose", action="store_true", help="print every check, not just failures")
     args = ap.parse_args()
+    sys.stdout.reconfigure(errors="replace")  # e.g. a ✓ in a check on a cp1252 console
 
     found = {os.path.basename(p)[6:-3]: p for p in sorted(glob.glob(os.path.join(HERE, "suite_*.py")))}
     names = args.suites or list(found)

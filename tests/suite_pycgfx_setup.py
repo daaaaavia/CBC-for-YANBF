@@ -1,5 +1,5 @@
 """pycgfx setup: status checks, install from the GitHub zip (with the fixes), manual
-placement, and the startup window (shown only while pycgfx isn't the tested version).
+placement and the command line. (The Set up downloads window: suite_setup_window.)
 
 Works offline: the 'GitHub zip' is rebuilt from the installed copy (fixes undone).
 Set YANBF_NETWORK_TESTS=1 to also download the real zip from GitHub."""
@@ -9,7 +9,6 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 import zipfile
 
 from _common import ROOT, S, check, finish, isolate
@@ -93,103 +92,6 @@ use_dest(D); os.makedirs(D); open(os.path.join(D, "pycgfx-1f78850.zip"), "wb").w
 note = ps.tidy_manual_placement()
 check(note == "Unzipped pycgfx-1f78850.zip" and ps.status() == ("ok", []) and
       not any(n.endswith(".zip") for n in os.listdir(D)), "the zip itself put in the folder -> installed")
-
-print("startup window")
-import tkinter as tk
-import yanbf_cbc as g
-errors = []
-g.messagebox.showerror = lambda *a, **k: errors.append((a, k))
-use_dest(D)
-
-
-def pump(cond=lambda: False, secs=5):
-    end = time.time() + secs
-    while time.time() < end:
-        root.update(); time.sleep(0.02)
-        if cond():
-            return True
-    return False
-
-
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update()
-check(paths.PYCGFX_MAIN in app.missing and "required tools" in app.status_var.get(), "Build blocked without pycgfx")
-app.startup_checks(); root.update()
-w = app.pycgfx_win
-check(w is not None and w.win.winfo_exists() and w.win.title() == "Set up pycgfx", "window opens at startup")
-check(errors == [], "no generic 'missing files' box on top of it")
-texts = []
-
-
-def walk(x):
-    for c in x.winfo_children():
-        try:
-            texts.append(str(c.cget("text")))
-        except tk.TclError:
-            pass
-        walk(c)
-
-
-walk(w.win)
-blob = "\n".join(texts)
-check(f"Use exactly this version: pycgfx {ps.SHORT} ({ps.DATE})" in blob, "says exactly which version to use")
-check(ps.ZIP_URL in blob and ps.COMMIT in ps.ZIP_URL and "Not the green Code button" in blob,
-      "links that exact version's zip, warns about the newest one")
-check("main.py, banner-camera.gltf and the cgfx folder" in blob and w.path_var.get() == D, "says what goes where")
-check("isn't set up yet" in w.status_label.cget("text"), f"status: {w.status_label.cget('text')}")
-w.check_again(); root.update()
-check(app.pycgfx_win.win.winfo_exists() and "isn't set up" in w.status_label.cget("text"), "Check again with nothing there")
-place(D); w.check_again(); root.update()
-check("is set up" in w.status_label.cget("text") and w.close_btn.cget("text") == "Done" and app.missing == []
-      and "required tools" not in app.status_var.get(), "by hand + Check again -> set up, Build unblocked")
-check("Added this project's two fixes" in app.log_text.get("1.0", "end"), "log says the fixes were added")
-w.close_btn.invoke(); root.update()
-app._on_close()
-
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-check(app.pycgfx_win is None and app.missing == [], "set up -> the window doesn't come back")
-app._on_close()
-
-print("automatic download")
-if sys.platform == "darwin":  # the Mac app only offers the manual steps (see suite_platform)
-    finish()
-shutil.rmtree(D)
-calls = []
-
-
-def fake_download(progress=None, cancel=None):
-    data = make_zip()
-    for n in range(0, len(data), 4096):
-        progress and progress(n, None)
-    calls.append(len(data))
-    return data
-
-
-real_download, ps.download = ps.download, fake_download
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-w = app.pycgfx_win
-check(w is not None, "deleted files -> the window comes back")
-w.auto_btn.invoke()
-check(pump(lambda: "is set up" in w.status_label.cget("text"), 10), f"automatic: {w.status_label.cget('text')}")
-check(calls and ps.status() == ("ok", []) and app.missing == [] and float(w.bar.cget("value")) == 1000,
-      "downloaded, fixed, checked, installed")
-w.close(); app._on_close()
-
-shutil.rmtree(D)
-ps.download = lambda progress=None, cancel=None: (_ for _ in ()).throw(OSError("no route to host"))
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-w = app.pycgfx_win
-w.auto_btn.invoke()
-check(pump(lambda: "Couldn't download" in w.status_label.cget("text")), f"offline: {w.status_label.cget('text')}")
-check("option 2" in w.status_label.cget("text") and str(w.auto_btn.cget("state")) == "normal", "offline -> try option 2")
-w.close(); root.update()
-app.start_build(); root.update()
-check(app._pycgfx_open(), "Build without pycgfx reopens the setup window")
-app._on_close()
-ps.download = real_download
 
 print("command line + network")
 r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", "get_pycgfx.py")], capture_output=True, text=True)

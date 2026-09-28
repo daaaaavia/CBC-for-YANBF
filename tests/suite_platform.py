@@ -1,7 +1,7 @@
 """Windows / macOS differences (platform_util.py, paths.py): tool names, where a frozen
 .app finds processes/, where user data goes, subprocess flags, the audio and 'open'
-commands, macOS dark mode, drag and drop through tkdnd, and the Mac pycgfx window
-(manual only). Runs on either system: sys.platform is switched to test the other."""
+commands, macOS dark mode and drag and drop through tkdnd. (The Mac setup window:
+suite_setup_window.) Runs on either system: sys.platform is switched to test the other."""
 import os
 import subprocess
 import sys
@@ -154,42 +154,4 @@ if REAL != "win32":
         check(root.tk.eval(script) == "copy" and got == [(["/tmp/a b.glb"], 5, 6)], f"bound drop script: {got}")
 root.destroy()
 
-print("pycgfx window on a Mac: manual only")
-import pycgfx_setup as ps  # noqa: E402
-import yanbf_cbc as g  # noqa: E402
-empty = os.path.join(S, "platform_pycgfx")
-paths.PYCGFX_DIR = empty
-paths.PYCGFX_MAIN = os.path.join(empty, "main.py")
-paths.REQUIRED[:] = [(p, d) for p, d in paths.REQUIRED if "pycgfx" not in p] + [(empty, True), (paths.PYCGFX_MAIN, False)]
-g.messagebox.showerror = lambda *a, **k: None
-root = tk.Tk(); root.withdraw()
-a = g.App(root); root.deiconify(); root.update()
-texts = []
-
-
-def walk(x):
-    for c in x.winfo_children():
-        try:
-            texts.append(str(c.cget("text")))
-        except tk.TclError:
-            pass
-        walk(c)
-
-
-with on("darwin"):
-    a.open_pycgfx_setup(); root.update()
-w = a.pycgfx_win
-walk(w.win)
-blob = "\n".join(texts)
-check(w.auto_btn is None and w.bar is None and "Option 1" not in blob
-      and "Download and set up automatically" not in blob, "no automatic download option")
-check("Download it by hand" in blob and "Show in Finder" in blob, "manual steps + Show in Finder")
-check(ps.ZIP_URL in blob and f"Use exactly this version: pycgfx {ps.SHORT}" in blob, "exact version + link")
-w.start_download(); root.update()
-check(not w.busy(), "start_download does nothing on a Mac")
-w.close(); root.update()
-a.open_pycgfx_setup(); root.update()
-check(a.pycgfx_win.auto_btn is not None if REAL != "darwin" else a.pycgfx_win.auto_btn is None,
-      "this system's window: automatic option only off a Mac")
-a._on_close()
 finish()

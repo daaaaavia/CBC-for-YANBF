@@ -1,6 +1,6 @@
 """ctrtool setup: status checks, install from Project_CTR's release zip, manual
-placement, the startup window (after pycgfx's, or on its own), the Mac differences,
-and --check-tools. Works offline: the 'release zip' is rebuilt from the installed copy.
+placement, the Mac builds, --check-tools and the command line. (The Set up downloads
+window: suite_setup_window.) Works offline: the 'release zip' is rebuilt from the installed copy.
 Set YANBF_NETWORK_TESTS=1 to also download the real zip from GitHub."""
 import io
 import os
@@ -8,7 +8,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import time
 import zipfile
 
 from _common import ROOT, S, check, finish, isolate
@@ -105,116 +104,6 @@ with open(os.path.join(D, "ctrtool-v1.3.0-x", EXE), "wb") as f:
     f.write(GOOD)
 note = cs.tidy_manual_placement()
 check(note and "Moved" in note and cs.status() == "ok" and os.listdir(D) == [EXE], f"unzipped folder put inside: {note}")
-
-print("startup window")
-import tkinter as tk  # noqa: E402
-import yanbf_cbc as g  # noqa: E402
-errors = []
-g.messagebox.showerror = lambda *a, **k: errors.append((a, k))
-
-
-def pump(cond=lambda: False, secs=5):
-    end = time.time() + secs
-    while time.time() < end:
-        root.update(); time.sleep(0.02)
-        if cond():
-            return True
-    return False
-
-
-def texts(win):
-    out = []
-
-    def walk(x):
-        for c in x.winfo_children():
-            try:
-                out.append(str(c.cget("text")))
-            except tk.TclError:
-                pass
-            walk(c)
-    walk(win)
-    return "\n".join(out)
-
-
-use_dest(D)
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update()
-check(paths.CTRTOOL in app.missing and "required tools" in app.status_var.get(), "Build blocked without ctrtool")
-app.startup_checks(); root.update()
-w = app.ctrtool_win
-check(w is not None and w.win.title() == "Set up ctrtool" and app.pycgfx_win is None,
-      "ctrtool window opens (pycgfx is fine)")
-check(errors == [], "no generic 'missing files' box on top of it")
-blob = texts(w.win)
-check("Use exactly this version: ctrtool 1.3.0" in blob and cs.zip_url() in blob and "No license" in blob,
-      "says which version, links the release zip, says why")
-check(w.path_var.get() == D and "isn't set up yet" in w.status_label.cget("text"), "shows the folder + status")
-with open(os.path.join(D, cs.zip_name()), "wb") as f:
-    f.write(make_zip())
-w.check_again(); root.update()
-check("is set up" in w.status_label.cget("text") and w.close_btn.cget("text") == "Done" and app.missing == [],
-      "zip placed + Check again -> set up, Build unblocked")
-app._on_close()
-
-print("pycgfx first, then ctrtool")
-use_dest(D)
-use_pycgfx(os.path.join(S, "ctrtool_no_pycgfx"))
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-check(app._pycgfx_open() and not app._ctrtool_open(), "both missing -> the pycgfx window first")
-use_pycgfx(REAL_PYCGFX)
-app.pycgfx_win.check_again()
-check(pump(lambda: app._ctrtool_open()), "pycgfx set up -> the ctrtool window follows")
-check(paths.CTRTOOL in app.missing and paths.PYCGFX_MAIN not in app.missing, "only ctrtool still missing")
-app._on_close()
-
-print("automatic download")
-calls = []
-
-
-def fake_download(progress=None, cancel=None):
-    data = make_zip()
-    for n in range(0, len(data), 65536):
-        progress and progress(n, None)
-    calls.append(len(data))
-    return data
-
-
-real_download, cs.download = cs.download, fake_download
-use_dest(D)
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-w = app.ctrtool_win
-if REAL == "darwin":
-    check(w.auto_btn is None, "Mac: no automatic option")
-else:
-    w.auto_btn.invoke()
-    check(pump(lambda: "is set up" in w.status_label.cget("text"), 10), f"automatic: {w.status_label.cget('text')}")
-    check(calls and cs.status() == "ok" and app.missing == [], "downloaded, checked, installed")
-app._on_close()
-use_dest(D)
-cs.download = lambda progress=None, cancel=None: (_ for _ in ()).throw(OSError("no route to host"))
-root = tk.Tk(); root.withdraw()
-app = g.App(root); root.deiconify(); root.update(); app.startup_checks(); root.update()
-w = app.ctrtool_win
-if REAL != "darwin":
-    w.auto_btn.invoke()
-    check(pump(lambda: "Couldn't download" in w.status_label.cget("text")), f"offline: {w.status_label.cget('text')}")
-    check(str(w.auto_btn.cget("state")) == "normal", "offline -> can try again or use option 2")
-cs.download = real_download
-
-print("on a Mac: manual only")
-w.close(); root.update()
-with on("darwin", "arm64"):
-    app.open_ctrtool_setup(); root.update()
-    w = app.ctrtool_win
-    blob = texts(w.win)
-check(w.auto_btn is None and "Download it by hand" in blob and "Show in Finder" in blob
-      and "Download and set up automatically" not in blob, "no automatic option, Show in Finder")
-check("macos_arm64" in w.link_url and "Intel is macos_x86_64" in blob, "links the Mac build, says which chip is which")
-w.start_download(); root.update()
-check(not w.busy(), "start_download does nothing on a Mac")
-app._on_close()
 
 print("--check-tools + command line")
 use_dest(D)
