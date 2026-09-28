@@ -63,9 +63,26 @@ every file and won't accept any other version.
   inside it, in its folder. Then press **Check again**.
 
 The window can't be closed until both files are set up, and **Build CIA**
-stays disabled until then. After that, the window doesn't come back. The two
-pycgfx fixes make the `name`/`nameModel` logo face the screen and stop some
-banners crashing on the 3DS. They're in `patches/pycgfx.patch`.
+stays disabled until then. After that, the window doesn't come back.
+
+### Changes to pycgfx
+
+pycgfx is the only outside tool this app changes. Everything else (makerom,
+ctrtool, bannertool, cwavtool and YANBF's files) is used exactly as its authors
+released it. pycgfx is downloaded unmodified from skyfloogle's GitHub, checked
+file by file, and then two small fixes are added to its `main.py`. The fixes
+are about 4 lines in total, and the `cgfx/` library files aren't touched:
+
+1. **Every mesh gets its node name** (`mesh_node_name`). Stock pycgfx leaves it
+   blank, and some banners crashed on the 3DS without it.
+2. **The logo faces you.** Bones named exactly `name` or `nameModel` get the
+   YAxial billboard mode, so the logo keeps facing the screen while the rest of
+   the banner spins. Stock pycgfx never sets this mode.
+
+Both were needed for a working 3D banner with a logo on real hardware. The
+fixes are in `patches/pycgfx.patch` and explained in
+`patches/pycgfx-PATCH_NOTES.txt`. They're this project's changes, not part of
+pycgfx, so please don't report problems with them to skyfloogle.
 
 ## Fields
 
