@@ -116,7 +116,7 @@ Blender) never needed fix 3, because it doesn't move any bones.
 |---|---|---|
 | NDS ROM | no | Only the header is read, to fill in the fields. The ROM itself isn't put in the CIA. |
 | Icon | yes | A 48×48 PNG. |
-| Banner | yes | A **3D model** (`.glb`, up to 512 KB) or a **flat image** (PNG, up to 256×128). |
+| Banner | yes | A **3D model** (`.glb`, up to 512 KB and 2k triangles) or a **flat image** (PNG, up to 256×128). |
 | Audio | no | An uncompressed WAV, up to 2.9375 s. If left empty, 1 s of silence is used. |
 | ROM path on SD card | no | Where the game is on the SD card, e.g. `/roms/nds/Game.nds`. Without it, the forwarder can't find the game. |
 | Title | yes | The name shown on the HOME Menu. |
