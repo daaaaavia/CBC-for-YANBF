@@ -346,8 +346,9 @@ import home_preview  # noqa: E402
 import preview  # noqa: E402
 flat = hc.flat_mesh(src)
 im = preview.render(flat, size=home_preview.SCREEN, ss=1, background=Image.new("RGB", home_preview.SCREEN, (0, 0, 0)))
-blue = im.getpixel((200, 128))
-check(blue[2] > 150 and blue[0] < 80, f"a flat banner is drawn on bannertool's rectangle (centre pixel {blue})")
+middle = [im.getpixel((x, y)) for x in range(150, 251, 5) for y in range(100, 157, 4)]
+blue = sum(1 for c in middle if c[2] > 150 and c[0] < 80) / len(middle)  # (the text's font varies by OS)
+check(blue > 0.5, f"a flat banner is drawn on bannertool's rectangle ({blue:.0%} of the middle is the banner's blue)")
 top = next(y for y in range(240) if im.getpixel((200, y)) != (0, 0, 0))
 yellow = [y for y in range(240) for x in range(150, 250, 4) if (lambda c: c[0] > 180 and c[1] > 150 and c[2] < 100)(im.getpixel((x, y)))]
 check(40 < top < 120 and im.getpixel((200, 20)) == (0, 0, 0) and yellow and min(yellow) > 120,
