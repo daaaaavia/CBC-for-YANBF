@@ -5,7 +5,8 @@
 CBC for YANBF makes 3DS forwarders for your DS games, with your own icon, banner and
 sound. Pick a `.nds`, an icon, a 3D (`.glb`) or flat (`.png`) banner and an
 optional `.wav`, press **Build CIA**, and you get a `.cia` that launches the game
-through YANBF and nds-bootstrap. It runs on Windows and macOS.
+through YANBF and nds-bootstrap. It can also change the icon, titles, banner or
+sound of a CIA you already have. It runs on Windows and macOS.
 
 > **Unofficial.** CBC for YANBF is an independent fan-made tool. It isn't affiliated
 > with, endorsed by or supported by YANBF, skyfloogle (pycgfx), Epicpkmn11 or
@@ -83,6 +84,31 @@ Both were needed for a working 3D banner with a logo on real hardware. The
 fixes are in `patches/pycgfx.patch` and explained in
 `patches/pycgfx-PATCH_NOTES.txt`. They're this project's changes, not part of
 pycgfx, so please don't report problems with them to skyfloogle.
+
+**The app also makes two more fixes**, for transparent materials (a glTF
+material with alpha mode BLEND, which Blender exports for "Blended" materials).
+They're applied while the app converts a banner, so the pycgfx files on disk
+stay exactly as above:
+
+3. **The bone lookup tree is rebuilt (this fixed a HOME Menu crash).** The
+   banner's bones are stored in a name-lookup table that the 3DS searches to
+   find bones such as `world` and `COMMON`. When a model has a BLEND material,
+   pycgfx moves the transparent bones to the end of the table, so they're drawn
+   last, but doesn't rebuild the table's search tree. The tree then points at
+   the wrong entries: looking up `world` finds the logo's bone instead, and the
+   HOME Menu crashes. A banner whose only transparent part was the logo crashed
+   for this reason. The app now rebuilds the tree after pycgfx sorts the bones.
+   Banners without BLEND materials come out byte-for-byte the same.
+4. **Transparent materials are marked as translucent.** pycgfx sets up the
+   blending for BLEND materials, but leaves the material's translucency kind
+   set to "opaque", so the 3DS may draw it in the wrong pass. The app now marks
+   BLEND materials as translucent.
+
+With both fixes, a banner with a transparent billboard logo works on a real 3DS.
+
+When either fix changes something, the build log shows a
+`[pycgfx fix]` line. For a hard-edged cut-out logo, MASK (alpha clip in
+Blender) never needed fix 3, because it doesn't move any bones.
 
 ## Fields
 
@@ -193,6 +219,31 @@ FTP to a 3DS is slow, usually under 1 MB/s. A CIA takes seconds, but a big ROM
 can take minutes. If it won't connect, check the IP address, check that ftpd
 is still running, and check that your firewall allows the connection.
 
+## Editing an existing CIA
+
+Switch the top of the window from **New forwarder** to **Edit existing CIA** to
+change a CIA you already have, without rebuilding it. Open the `.cia`, then tick
+what you want to change:
+
+- **Icon picture** (a 48×48 `.png`)
+- **Titles:** the title, long title and publisher
+- **Banner:** a 3D (`.glb`) or flat (`.png`) banner
+- **Sound** (a `.wav`)
+
+Anything you don't tick is kept exactly as it is. Each part shows **Now** and
+**New** side by side, and you can play both sounds. **HOME Menu preview…**
+shows the old and new banners next to each other on the HOME Menu.
+
+**Save edited CIA** writes a copy called `{name} (edited).cia` in the output
+folder, and the original file isn't changed. The copy keeps the Title ID and
+the ROM path, and its version number goes up by one, so FBI installs it over
+the installed one as an update. You don't need to delete the old one first.
+The ROM, its save and its forwarder settings aren't touched.
+
+Only unencrypted CIAs can be edited. That includes forwarders made by this app
+or other tools and most homebrew. eShop and retail CIAs are encrypted, so the
+editor refuses them. To change the ROM path, build a new CIA instead.
+
 ## macOS
 
 The Mac app works like the Windows one, with a few differences:
@@ -215,6 +266,44 @@ The Mac app works like the Windows one, with a few differences:
   `~/Documents/CBC-for-YANBF/output/`.
 - **Drag and drop** doesn't work on Intel Macs, so use Browse there. It works
   on Apple Silicon.
+
+## Troubleshooting
+
+### The game gets stuck on a white screen
+
+This usually isn't the CIA. The CIA only points the forwarder at the ROM, and
+nds-bootstrap does the rest. The forwarder keeps its own per-game settings,
+separate from TWiLight Menu++'s, so a game can work in one and not the other.
+
+**Works in TWiLight Menu++ but not from the CIA** (this happened with *Super
+Mario 64 DS*): when the forwarder has no settings file for a game, it
+passes "default" (-1) values straight to nds-bootstrap. TWiLight Menu++
+passes real values. Most games don't mind, but some hang on a white screen. The
+fix is to give the forwarder a settings file for that game:
+
+1. Go to `sd:/_nds/ntr-forwarder/gamesettings/`. If there's already a file
+   there for another game, copy it.
+2. Name it exactly after the ROM file plus `.ini`, for example
+   `Super Mario 64 DS (USA, Australia) (Rev 1).nds.ini`. The name has to
+   match the ROM exactly. A file left over from an older ROM name is
+   ignored, so if you rename a ROM, rename its settings file too.
+3. Set these lines:
+
+   ```
+   BOOST_CPU = 0
+   CARD_READ_DMA = 1
+   ASYNC_CARD_READ = 0
+   ```
+
+**Doesn't work in TWiLight Menu++ either** (this happened with *GoldenEye
+007*): fix it in TWiLight Menu++ first. Press **Y** on the game and
+check its settings. Here, widescreen was on, but there's no widescreen
+patch for that version of the ROM, and cheats were on too. Turning both
+off fixed it. Then make the forwarder settings file as above, with
+`WIDESCREEN = 0` as well.
+
+If a game still won't start, try nds-bootstrap's nightly build, or check the
+nds-bootstrap issues on GitHub.
 
 ## Credits
 

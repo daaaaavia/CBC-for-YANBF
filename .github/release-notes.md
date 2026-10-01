@@ -5,6 +5,17 @@ sound. You can also send the finished files to your 3DS over Wi-Fi.
 > cwavtool, Project_CTR, tkinterdnd2/tkdnd or Nintendo. Please report problems
 > here, not to them. No ROMs or Nintendo software are included.
 
+## What's new in v1.0.4
+
+- **Edit existing CIAs.** Change the icon, titles, banner or sound of a CIA you
+  already have, with old and new side by side. The edited copy goes up one
+  version, so it installs over the original.
+- **Transparent banners no longer crash the HOME Menu.** pycgfx left the bone
+  lookup table pointing at the wrong bones when a model had a transparent
+  (BLEND) material. The app now fixes that and marks those materials as
+  translucent.
+- **Troubleshooting** in the README, for games that get stuck on a white screen.
+
 ## Which file?
 
 - **Windows:** `…-Windows.zip`

@@ -16,6 +16,7 @@ import argparse  # noqa: F401
 import gltflib  # noqa: F401
 from PIL import Image, ImageDraw, ImageTk
 
+import cia_edit_page
 import ctrtool_setup
 import dragdrop
 import ftp_window
@@ -25,6 +26,7 @@ import paths
 import pipeline as pl
 import platform_util as pu
 import preview
+import pycgfx_fixes
 import pycgfx_setup
 import settings
 import setup_window
@@ -1510,9 +1512,11 @@ def check_tools_report():
 def main():
     if "--check-tools" in sys.argv:
         sys.exit(check_tools_report())
+    pycgfx_fixes.install()  # fixes 3 + 4, for transparent (BLEND) materials
     root = tk.Tk()
     root.withdraw()
     app = App(root)
+    cia_edit_page.install(app)  # the "New forwarder | Edit existing CIA" switch
     root.deiconify()
     root.after_idle(app.startup_checks)
     root.mainloop()

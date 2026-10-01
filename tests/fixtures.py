@@ -292,6 +292,70 @@ def fake_tools(d):
     return tools
 
 
+# ---------------------------------------------------------------- editor test files
+# A full set of inputs that look like something on screen (the CIA editor's previews
+# are checked against them): two icons, a flat banner with a yellow line in its lower
+# half, a 3D banner and a 2 s chime.
+def _font(size):
+    from PIL import ImageFont
+    for name in ("segoeuib.ttf", "arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf"):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            pass
+    try:
+        return ImageFont.load_default(size)
+    except TypeError:  # older Pillow
+        return ImageFont.load_default()
+
+
+def _gradient_icon(path, letter, top, bottom):
+    im = Image.new("RGBA", (48, 48))
+    d = ImageDraw.Draw(im)
+    for y in range(48):
+        t = y / 47
+        d.line((0, y, 47, y), fill=tuple(int(a + (b - a) * t) for a, b in zip(top, bottom)) + (255,))
+    d.rounded_rectangle((1, 1, 46, 46), radius=8, outline=(255, 255, 255, 200), width=2)
+    d.text((24, 25), letter, font=_font(30), fill="white", anchor="mm")
+    im.save(path)
+
+
+def blue_icon(path):
+    _gradient_icon(path, "T", (30, 90, 220), (40, 200, 180))
+
+
+def orange_icon(path):
+    _gradient_icon(path, "E", (255, 170, 40), (255, 60, 20))
+
+
+def test_banner_png(path):
+    im = Image.new("RGBA", (256, 128), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((4, 16, 251, 111), radius=14, fill=(32, 96, 200, 255), outline="white", width=3)
+    d.text((128, 50), "YANBF-CBC", font=_font(30), fill="white", anchor="mm")
+    d.text((128, 84), "TEST BANNER", font=_font(18), fill=(255, 220, 60, 255), anchor="mm")
+    im.save(path)
+
+
+def chime_wav(path, seconds=2.0, rate=48000):
+    """Three decaying notes (C, E, G), stereo 16-bit."""
+    frames = bytearray()
+    for i in range(int(rate * seconds)):
+        t = i / rate
+        v = 0.0
+        for k, f in enumerate((523.25, 659.25, 783.99)):
+            start = k * 0.25
+            if t >= start:
+                v += math.sin(2 * math.pi * f * (t - start)) * math.exp(-3 * (t - start)) * 0.3
+        s = struct.pack("<h", int(max(-1.0, min(1.0, v)) * 32767))
+        frames += s + s
+    with wave.open(path, "wb") as w:
+        w.setnchannels(2)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(bytes(frames))
+
+
 # ---------------------------------------------------------------- all
 def _write(path, data):
     with open(path, "wb") as f:
