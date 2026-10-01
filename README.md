@@ -141,9 +141,22 @@ game needs its own ID. The app remembers the IDs it has used in
 - rebuilding a game gives it **the same ID**, so it installs as an update;
 - a new game gets **the next free ID**, starting at `FF400` (YANBF's range).
 
-If other forwarders on your 3DS already use IDs from `FF400`, **Options…** lets
-you start higher. It warns you when you're close to running out (the last ID
-is `FFFFF`).
+> **Already have forwarders on your 3DS? Set the ID offset before your first
+> build.** The app only knows the IDs it has used itself. Forwarders made with
+> YANBF or other tools often use the same range from `FF400`, and the 3DS won't
+> warn you. Installing a new CIA with an ID that's already taken silently
+> replaces that forwarder. The game's save on the SD card is safe, but the
+> HOME Menu icon is gone.
+>
+> To check, open **FBI → Titles** on the 3DS and look at your forwarders' Title
+> IDs. The Unique ID is the five characters before the final `00`, so
+> `000400000FF40A00` uses `FF40A`. Then open **Options…** and set the **ID offset**
+> so new IDs start above the highest one you found. For example, offset `11`
+> starts at `FF40B`. Leaving extra room, such as offset `100` (`FF464`), is
+> fine.
+
+**Options…** also warns you when you're close to running out (the last ID is
+`FFFFF`).
 
 ### 3D banner template
 
