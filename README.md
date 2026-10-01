@@ -318,6 +318,22 @@ off fixed it. Then make the forwarder settings file as above, with
 If a game still won't start, try nds-bootstrap's nightly build, or check the
 nds-bootstrap issues on GitHub.
 
+## AI disclosure
+
+The app itself was written with the help of AI (Claude Code). That covers the
+window, the previews, the CIA editor, FTP sending, the setup window, the tests
+and the build scripts.
+
+**The tools that actually make the CIA weren't.** YANBF's forwarder and
+generator files, pycgfx, bannertool, cwavtool, makerom and ctrtool are their
+authors' own work, and the app only runs them. The one exception is pycgfx:
+the fixes in `patches/pycgfx.patch`, and fixes 3 and 4 that the app applies
+after converting a banner, were written with AI. See
+[Changes to pycgfx](#changes-to-pycgfx).
+
+**Tested on real hardware.** CIAs built and edited with this app have been
+installed and tested on a physical New Nintendo 3DS XL.
+
 ## Credits
 
 CBC for YANBF is just a front end. The real work is done by these projects, and
