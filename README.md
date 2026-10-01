@@ -321,7 +321,7 @@ nds-bootstrap issues on GitHub.
 ## AI disclosure
 
 The app itself was written with the help of AI (Claude Code). That covers the
-window, the previews, the CIA editor, FTP sending, the setup window, the tests
+window for the CIA editor and forwarder genertor, the previews, FTP sending, the setup window, the tests
 and the build scripts.
 
 **The tools that actually make the CIA weren't.** YANBF's forwarder and
